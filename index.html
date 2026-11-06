@@ -11,8 +11,12 @@
       --card: #ffffff;
       --text: #3d3a4a;
       --muted: #9a96a8;
-      --accent: #a78bdb;      /* 파스텔 보라 (오늘 표시) */
+      --line: #ece8f3;
+      --accent: #a78bdb;      /* 파스텔 보라: 오늘, 선택 강조 */
       --accent-soft: #efe9fa;
+      --ok: #5bbf8a;          /* 초록: 모두 가능한 날 */
+      --ok-soft: #eefaf3;
+      --no-rgb: 224, 90, 106; /* 빨강: 안 되는 날 (배경 진하기에 사용) */
       --sat: #4a7bd8;
       --sun: #e05a6a;
     }
@@ -24,13 +28,12 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 24px 16px;
+      padding: 24px 16px 40px;
     }
 
-    .app {
-      max-width: 420px;
-      margin: 0 auto;
-    }
+    button { font-family: inherit; }
+
+    .app { max-width: 420px; margin: 0 auto; }
 
     h1 {
       font-size: 26px;
@@ -38,22 +41,101 @@
       text-align: center;
       color: var(--accent);
       letter-spacing: -0.5px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
-    .calendar {
+    .card {
       background: var(--card);
       border-radius: 20px;
-      padding: 16px 12px 20px;
       box-shadow: 0 4px 20px rgba(120, 100, 160, 0.08);
     }
 
-    /* < 2026년 11월 > */
+    /* ---------- 참여자 영역 ---------- */
+    .people { padding: 14px; margin-bottom: 12px; }
+
+    .add-row { display: flex; gap: 8px; }
+
+    .add-row input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--text);
+      background: #fcfbfe;
+      outline: none;
+    }
+    .add-row input:focus { border-color: var(--accent); }
+
+    .add-row button {
+      height: 44px;
+      padding: 0 18px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chips:empty { display: none; }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 36px;
+      padding: 0 2px 0 10px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+    .chip.sel {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .chip .emo { font-size: 17px; }
+
+    .chip .del {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: none;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .hint b { color: var(--text); }
+
+    /* ---------- 달력 ---------- */
+    .calendar { padding: 14px 8px 16px; }
+
     .month-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      padding: 0 4px;
+      margin-bottom: 8px;
     }
 
     .month-nav button {
@@ -64,22 +146,16 @@
       background: var(--accent-soft);
       color: var(--accent);
       font-size: 22px;
-      font-family: inherit;
       cursor: pointer;
     }
-
     .month-nav button:active { background: #e2d8f5; }
 
-    #title {
-      font-size: 19px;
-      font-weight: 700;
-    }
+    #title { font-size: 19px; font-weight: 700; }
 
-    /* 요일 줄 + 날짜 칸: 7칸짜리 격자 */
     .weekdays, #grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      gap: 3px;
     }
 
     .weekdays div {
@@ -87,43 +163,227 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--muted);
-      padding: 8px 0;
+      padding: 6px 0;
     }
 
     .cell {
-      aspect-ratio: 1;          /* 정사각형 */
+      min-height: 72px;
+      border-radius: 10px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 500;
+      gap: 3px;
+      padding: 4px 1px 4px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      transition: background 0.15s;
     }
 
-    .cell span {
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .num {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
     }
 
-    .weekdays .sun, .cell.sun { color: var(--sun); }
-    .weekdays .sat, .cell.sat { color: var(--sat); }
+    .weekdays .sun, .cell.sun .num { color: var(--sun); }
+    .weekdays .sat, .cell.sat .num { color: var(--sat); }
 
-    .cell.past { opacity: 0.35; }
+    .cell.past { opacity: 0.35; cursor: default; }
 
-    .cell.today span {
-      border: 2px solid var(--accent);
+    /* 모두 가능한 날: 초록 동그라미 테두리 */
+    .cell.allok .num { box-shadow: 0 0 0 2px var(--ok); }
+
+    /* 오늘: 보라색으로 채운 숫자 (동그라미 테두리와 겹치지 않게) */
+    .cell.today .num { background: var(--accent); color: #fff; font-weight: 700; }
+
+    .faces {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+      line-height: 1;
+    }
+
+    .face { position: relative; font-size: 13px; line-height: 1; }
+
+    .face .x {
+      position: absolute;
+      right: -3px;
+      bottom: -3px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow: 0 0 0 1px #fff;
+      color: #fff;
+      font-size: 8px;
+      font-style: normal;
+      font-weight: 800;
+      line-height: 9px;
+      text-align: center;
+    }
+
+    /* 지금 선택된 사람의 표시는 조금 더 크게 */
+    .face.mine { font-size: 17px; }
+    .face.mine .x {
+      width: 12px;
+      height: 12px;
+      right: -4px;
+      bottom: -4px;
+      font-size: 10px;
+      line-height: 12px;
+    }
+
+    .more { font-size: 10px; font-weight: 700; }
+
+    .cnt {
+      margin-top: auto;
+      font-size: 9px;
       font-weight: 700;
+      color: #a33d4b;
+      white-space: nowrap;
     }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 14px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .lg-today { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+    .lg-ok { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ok); }
+
+    /* ---------- 하단 시트 ---------- */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 30, 60, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 22px 22px 0 0;
+      padding: 10px 20px 28px;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+    }
+    .overlay.show .sheet { transform: none; }
+
+    .handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--line);
+      margin: 0 auto 14px;
+    }
+
+    .sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .sheet-desc { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+
+    .who-list { list-style: none; }
+    .who-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .who-list li:last-child { border-bottom: none; }
+    .who-list .emo { font-size: 22px; }
+
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+    .emoji-grid button {
+      aspect-ratio: 1;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      background: #faf8fd;
+      font-size: 26px;
+      cursor: pointer;
+    }
+    .emoji-grid button.cur { border-color: var(--accent); background: var(--accent-soft); }
+    .emoji-grid button:disabled { opacity: 0.2; cursor: default; }
+
+    .btn-row { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      height: 48px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.ghost { background: #f1eef6; color: var(--text); }
+    .btn.danger { background: var(--sun); color: #fff; }
+
+    /* ---------- 안내 토스트 ---------- */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 36px;
+      transform: translate(-50%, 20px);
+      background: rgba(50, 42, 70, 0.92);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 20px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
   </style>
 </head>
 <body>
   <div class="app">
     <h1>모일날</h1>
 
-    <div class="calendar">
+    <section class="card people">
+      <div class="add-row">
+        <input id="nameInput" type="text" placeholder="이름 입력" maxlength="10" autocomplete="off">
+        <button id="addBtn">추가</button>
+      </div>
+      <div id="chips" class="chips"></div>
+      <p id="hint" class="hint"></p>
+    </section>
+
+    <section class="card calendar">
       <div class="month-nav">
         <button id="prev" aria-label="이전 달">‹</button>
         <div id="title"></div>
@@ -136,59 +396,372 @@
       </div>
 
       <div id="grid"></div>
+
+      <div class="legend">
+        <span><i class="lg-today"></i>오늘</span>
+        <span><i class="lg-ok"></i>모두 가능</span>
+        <span>날짜를 길게 누르면 상세 보기</span>
+      </div>
+    </section>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="sheet">
+      <div class="handle"></div>
+      <div id="sheetBody"></div>
     </div>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script>
+    // ===== 기본 설정 =====
+    const EMOJIS = [
+      '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮',
+      '🐷', '🐸', '🐵', '🐧', '🐤', '🦄', '🐙', '🐳', '😀', '😎', '🤓', '🥳'
+    ];
+    const MAX_PEOPLE = 15;
+    const MIN_PEOPLE = 2;
+    const STORAGE_KEY = 'moilnal-v1';
+    const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+
+    // ===== 저장/불러오기 =====
+    // participants: [{ id, name, emoji }]
+    // marks: { '2026-11-12': [참여자 id, ...] }  ← 그날 안 되는 사람들
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.participants)) {
+          const s = {
+            participants: saved.participants,
+            marks: saved.marks || {},
+            selectedId: saved.selectedId || null
+          };
+          if (!s.participants.some(p => p.id === s.selectedId)) s.selectedId = null;
+          return s;
+        }
+      } catch (e) {}
+      return { participants: [], marks: {}, selectedId: null };
+    }
+
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    let state = load();
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // 지금 보고 있는 달 (항상 1일로 둠)
     let current = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    function render() {
-      const year = current.getFullYear();
-      const month = current.getMonth();
+    // ===== 작은 도우미들 =====
+    const $ = id => document.getElementById(id);
 
-      document.getElementById('title').textContent = `${year}년 ${month + 1}월`;
+    function h(tag, className, text) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = text;
+      return el;
+    }
 
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+    function dateKey(y, m, d) {
+      return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
 
-      const firstDay = new Date(year, month, 1).getDay();       // 1일의 요일 (0=일)
-      const lastDate = new Date(year, month + 1, 0).getDate();  // 이번 달 마지막 날짜
+    function findPerson(id) {
+      return state.participants.find(p => p.id === id);
+    }
 
-      // 1일 앞의 빈 칸
-      for (let i = 0; i < firstDay; i++) {
-        grid.appendChild(document.createElement('div'));
+    let toastTimer;
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // 짧게 누르기(탭)와 길게 누르기(0.5초)를 구분
+    function onPress(el, onTap, onLong) {
+      let timer = null, fired = false, sx = 0, sy = 0;
+      const cancel = () => { clearTimeout(timer); timer = null; };
+
+      el.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('[data-nopress]')) return;
+        fired = false;
+        sx = e.clientX; sy = e.clientY;
+        cancel();
+        timer = setTimeout(() => {
+          timer = null;
+          fired = true;
+          if (navigator.vibrate) navigator.vibrate(15);
+          onLong();
+        }, 500);
+      });
+      el.addEventListener('pointermove', e => {
+        if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel();
+      });
+      el.addEventListener('pointerup', cancel);
+      el.addEventListener('pointerleave', cancel);
+      el.addEventListener('pointercancel', cancel);
+      el.addEventListener('click', e => {
+        if (fired) { fired = false; return; }   // 길게 누른 뒤 손을 뗄 때는 탭으로 치지 않음
+        onTap(e);
+      });
+      el.addEventListener('contextmenu', e => e.preventDefault());
+    }
+
+    // ===== 하단 시트 =====
+    let sheetOpenedAt = 0;
+    function openSheet(build) {
+      const body = $('sheetBody');
+      body.innerHTML = '';
+      build(body);
+      sheetOpenedAt = Date.now();
+      $('overlay').classList.add('show');
+    }
+    function closeSheet() {
+      $('overlay').classList.remove('show');
+    }
+    $('overlay').addEventListener('click', e => {
+      if (e.target === $('overlay') && Date.now() - sheetOpenedAt > 300) closeSheet();
+    });
+
+    // ===== 참여자 =====
+    function addPerson() {
+      const input = $('nameInput');
+      const name = input.value.trim();
+      if (!name) return toast('이름을 입력해주세요');
+      if (state.participants.length >= MAX_PEOPLE) return toast(`최대 ${MAX_PEOPLE}명까지 추가할 수 있어요`);
+      if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
+
+      const used = state.participants.map(p => p.emoji);
+      const free = EMOJIS.filter(e => !used.includes(e));
+      const emoji = free[Math.floor(Math.random() * free.length)];
+
+      state.participants.push({
+        id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name,
+        emoji
+      });
+      input.value = '';
+      save();
+      render();
+    }
+
+    function deletePerson(person) {
+      openSheet(body => {
+        body.append(
+          h('h3', 'sheet-title', `${person.emoji} ${person.name} 님을 삭제할까요?`),
+          h('p', 'sheet-desc', '표시한 안 되는 날도 함께 지워져요.')
+        );
+        const row = h('div', 'btn-row');
+        const cancelBtn = h('button', 'btn ghost', '취소');
+        const okBtn = h('button', 'btn danger', '삭제');
+        cancelBtn.addEventListener('click', closeSheet);
+        okBtn.addEventListener('click', () => {
+          state.participants = state.participants.filter(p => p.id !== person.id);
+          for (const key of Object.keys(state.marks)) {
+            state.marks[key] = state.marks[key].filter(id => id !== person.id);
+            if (state.marks[key].length === 0) delete state.marks[key];
+          }
+          if (state.selectedId === person.id) state.selectedId = null;
+          save();
+          closeSheet();
+          render();
+          toast('삭제했어요');
+        });
+        row.append(cancelBtn, okBtn);
+        body.append(row);
+      });
+    }
+
+    function pickEmoji(person) {
+      openSheet(body => {
+        body.append(
+          h('h3', 'sheet-title', `${person.name} 님의 캐릭터 고르기`),
+          h('p', 'sheet-desc', '흐린 이모지는 다른 사람이 쓰고 있어요.')
+        );
+        const grid = h('div', 'emoji-grid');
+        for (const emoji of EMOJIS) {
+          const btn = h('button', emoji === person.emoji ? 'cur' : '', emoji);
+          const owner = state.participants.find(p => p.emoji === emoji && p.id !== person.id);
+          if (owner) btn.disabled = true;
+          btn.addEventListener('click', () => {
+            person.emoji = emoji;
+            save();
+            closeSheet();
+            render();
+          });
+          grid.append(btn);
+        }
+        body.append(grid);
+      });
+    }
+
+    function renderPeople() {
+      const chips = $('chips');
+      chips.innerHTML = '';
+
+      for (const person of state.participants) {
+        const chip = h('div', 'chip' + (person.id === state.selectedId ? ' sel' : ''));
+        chip.append(h('span', 'emo', person.emoji), h('span', 'nm', person.name));
+
+        const del = h('button', 'del', '×');
+        del.dataset.nopress = '1';
+        del.setAttribute('aria-label', `${person.name} 삭제`);
+        del.addEventListener('click', e => {
+          e.stopPropagation();
+          deletePerson(person);
+        });
+        chip.append(del);
+
+        onPress(chip,
+          () => { state.selectedId = person.id; save(); render(); },
+          () => pickEmoji(person)
+        );
+        chips.append(chip);
       }
 
-      for (let d = 1; d <= lastDate; d++) {
-        const date = new Date(year, month, d);
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-
-        const dow = date.getDay();
-        if (dow === 0) cell.classList.add('sun');
-        if (dow === 6) cell.classList.add('sat');
-        if (date < today) cell.classList.add('past');
-        if (date.getTime() === today.getTime()) cell.classList.add('today');
-
-        const num = document.createElement('span');
-        num.textContent = d;
-        cell.appendChild(num);
-        grid.appendChild(cell);
+      // 상황에 맞는 안내 문구
+      const hint = $('hint');
+      const count = state.participants.length;
+      const sel = findPerson(state.selectedId);
+      if (count === 0) {
+        hint.textContent = `함께할 사람 이름을 추가해주세요 (${MIN_PEOPLE}~${MAX_PEOPLE}명)`;
+      } else if (count < MIN_PEOPLE) {
+        hint.textContent = `${MIN_PEOPLE - count}명 더 추가해주세요`;
+      } else if (!sel) {
+        hint.textContent = '내 이름을 탭해서 선택하세요 · 길게 누르면 이모지 변경';
+      } else {
+        hint.innerHTML = '';
+        hint.append(h('b', '', `${sel.emoji} ${sel.name}`), ' 님 입력 중 · 안 되는 날을 탭하세요');
       }
     }
 
-    document.getElementById('prev').addEventListener('click', () => {
-      current.setMonth(current.getMonth() - 1);
-      render();
+    // ===== 달력 =====
+    function toggleMark(key) {
+      const list = state.marks[key] || [];
+      const i = list.indexOf(state.selectedId);
+      if (i >= 0) list.splice(i, 1);
+      else list.push(state.selectedId);
+      if (list.length) state.marks[key] = list;
+      else delete state.marks[key];
+      save();
+      renderCalendar();
+    }
+
+    // 그날 안 되는 사람들 (선택된 사람이 맨 앞)
+    function unavailablePeople(key) {
+      const ids = state.marks[key] || [];
+      return state.participants
+        .filter(p => ids.includes(p.id))
+        .sort((a, b) => (b.id === state.selectedId) - (a.id === state.selectedId));
+    }
+
+    function showDayDetail(date, key) {
+      const people = unavailablePeople(key);
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title',
+          `${date.getMonth() + 1}월 ${date.getDate()}일 (${DOW[date.getDay()]})`));
+        if (state.participants.length === 0) {
+          body.append(h('p', 'sheet-desc', '아직 참여자가 없어요.'));
+        } else if (people.length === 0) {
+          body.append(h('p', 'sheet-desc', '모두 가능한 날이에요 🎉'));
+        } else {
+          body.append(h('p', 'sheet-desc', `${people.length}명 안 됨`));
+          const ul = h('ul', 'who-list');
+          for (const p of people) {
+            const li = h('li');
+            li.append(h('span', 'emo', p.emoji), h('span', '', p.name));
+            ul.append(li);
+          }
+          body.append(ul);
+        }
+      });
+    }
+
+    function renderCalendar() {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      $('title').textContent = `${year}년 ${month + 1}월`;
+
+      const grid = $('grid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      const total = state.participants.length;
+
+      for (let i = 0; i < firstDay; i++) grid.append(h('div'));
+
+      for (let d = 1; d <= lastDate; d++) {
+        const date = new Date(year, month, d);
+        const key = dateKey(year, month, d);
+        const cell = h('div', 'cell');
+        const dow = date.getDay();
+        const isPast = date < today;
+
+        if (dow === 0) cell.classList.add('sun');
+        if (dow === 6) cell.classList.add('sat');
+        if (isPast) cell.classList.add('past');
+        if (date.getTime() === today.getTime()) cell.classList.add('today');
+
+        cell.append(h('span', 'num', d));
+
+        const people = unavailablePeople(key);
+        if (people.length > 0) {
+          // 안 되는 사람 비율이 높을수록 배경을 진하게
+          const ratio = people.length / total;
+          cell.style.background = `rgba(var(--no-rgb), ${(0.08 + 0.4 * ratio).toFixed(2)})`;
+
+          const faces = h('div', 'faces');
+          for (const p of people.slice(0, 3)) {
+            const face = h('span', 'face' + (p.id === state.selectedId ? ' mine' : ''), p.emoji);
+            face.append(h('i', 'x', '×'));
+            faces.append(face);
+          }
+          if (people.length > 3) faces.append(h('span', 'more', `+${people.length - 3}`));
+          cell.append(faces, h('span', 'cnt', `${people.length}명 안 됨`));
+        } else if (total > 0 && !isPast) {
+          cell.classList.add('allok');
+        }
+
+        if (!isPast) {
+          onPress(cell,
+            () => {
+              if (!state.selectedId) return toast('먼저 이름을 골라주세요');
+              toggleMark(key);
+            },
+            () => showDayDetail(date, key)
+          );
+        }
+
+        grid.append(cell);
+      }
+    }
+
+    function render() {
+      renderPeople();
+      renderCalendar();
+    }
+
+    // ===== 이벤트 연결 =====
+    $('addBtn').addEventListener('click', addPerson);
+    $('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        addPerson();
+      }
     });
 
-    document.getElementById('next').addEventListener('click', () => {
+    $('prev').addEventListener('click', () => {
+      current.setMonth(current.getMonth() - 1);
+      renderCalendar();
+    });
+    $('next').addEventListener('click', () => {
       current.setMonth(current.getMonth() + 1);
-      render();
+      renderCalendar();
     });
 
     render();
