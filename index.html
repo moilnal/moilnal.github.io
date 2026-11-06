@@ -14,7 +14,7 @@
       --line: #ece8f3;
       --accent: #a78bdb;      /* 파스텔 보라: 오늘, 선택 강조 */
       --accent-soft: #efe9fa;
-      --ok: #5bbf8a;          /* 초록: 모두 가능한 날 */
+      --ok: #5bbf8a;          /* 초록: 모두 가능한 날, 응답 완료 */
       --no-rgb: 224, 90, 106; /* 빨강: 안 되는 날 (배경 진하기에 사용) */
       --sat: #4a7bd8;
       --sun: #e05a6a;
@@ -34,13 +34,30 @@
 
     .app { max-width: 420px; margin: 0 auto; }
 
+    /* ---------- 상단: 앱 이름 + 설정 ---------- */
+    .top { position: relative; margin-bottom: 16px; }
+
     h1 {
       font-size: 26px;
       font-weight: 800;
       text-align: center;
       color: var(--accent);
       letter-spacing: -0.5px;
-      margin-bottom: 16px;
+    }
+
+    .gear {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: none;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.6;
     }
 
     .card {
@@ -50,56 +67,52 @@
     }
 
     /* ---------- 참여자 영역 ---------- */
-    .people { padding: 14px; margin-bottom: 12px; }
+    .people { padding: 12px 14px 14px; margin-bottom: 12px; }
 
-    .add-row { display: flex; gap: 8px; }
-
-    .emoji-btn {
-      width: 44px;
-      height: 44px;
-      flex-shrink: 0;
-      border: 1.5px solid var(--line);
-      border-radius: 12px;
-      background: #fcfbfe;
-      font-size: 22px;
-      cursor: pointer;
+    /* 맨 위 한 줄: 인원 조절 + 진행 상황 */
+    .people-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
 
-    .add-row input {
-      flex: 1;
-      min-width: 0;
-      height: 44px;
-      border: 1.5px solid var(--line);
-      border-radius: 12px;
-      padding: 0 12px;
-      font-family: inherit;
-      font-size: 16px;
-      color: var(--text);
-      background: #fcfbfe;
-      outline: none;
-    }
-    .add-row input:focus { border-color: var(--accent); }
-
-    .add-btn {
-      height: 44px;
-      padding: 0 18px;
+    .stepper { display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; }
+    .stepper .icon { font-size: 16px; margin-right: 2px; }
+    .stepper button {
+      width: 32px;
+      height: 32px;
       border: none;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff !important;
-      font-size: 15px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 18px;
       font-weight: 700;
+      line-height: 1;
       cursor: pointer;
     }
+    .stepper button:disabled { opacity: 0.35; cursor: default; }
+    #sizeLabel { min-width: 36px; text-align: center; }
+
+    .progress { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .bar {
+      width: 56px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--line);
+      overflow: hidden;
+    }
+    .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width 0.25s; }
+    .progress.all { color: var(--ok); }
+    .progress.all .bar i { background: var(--ok); }
 
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .chips:empty { display: none; }
 
     .chip {
       display: flex;
       align-items: center;
       height: 38px;
-      padding: 0 2px 0 3px;
+      padding: 0 12px 0 3px;
       border: 2px solid var(--line);
       border-radius: 19px;
       background: #fff;
@@ -109,7 +122,14 @@
       user-select: none;
       -webkit-user-select: none;
     }
-    .chip.sel { border-color: var(--accent); background: var(--accent-soft); }
+    .chip.pending { opacity: 0.6; }           /* 아직 응답 안 한 사람: 살짝 흐리게 */
+    .chip.sel { opacity: 1; border-color: var(--accent); background: var(--accent-soft); }
+    .chip.empty {
+      border-style: dashed;
+      border-color: #cfc6e0;
+      background: #fcfbfe;
+      color: var(--muted);
+    }
 
     /* 칩의 이모지 부분: 탭하면 이모지 변경 */
     .chip .emo {
@@ -123,20 +143,11 @@
       font-size: 17px;
     }
     .chip.sel .emo { background: #fff; }
+    .chip.empty .emo { background: none; font-size: 15px; }
 
-    /* 칩의 이름 부분: 탭하면 입력할 사람 선택 */
-    .chip .nm { padding: 0 4px 0 7px; line-height: 34px; }
-
-    .chip .del {
-      width: 28px;
-      height: 28px;
-      border: none;
-      border-radius: 50%;
-      background: none;
-      color: var(--muted);
-      font-size: 16px;
-      cursor: pointer;
-    }
+    /* 칩의 이름 부분: 탭하면 입력 모드 */
+    .chip .nm { padding-left: 7px; line-height: 34px; }
+    .chip .check { margin-left: 4px; color: var(--ok); font-weight: 800; }
 
     .hint {
       margin-top: 10px;
@@ -144,6 +155,7 @@
       color: var(--muted);
       line-height: 1.4;
     }
+    .hint:empty { display: none; }
 
     /* 입력 모드 안내: "멍청 님 입력 중" + 완료 */
     .hint.editing {
@@ -323,7 +335,7 @@
       line-height: 1.5;
     }
 
-    /* ---------- 하단 시트 ---------- */
+    /* ---------- 팝업 (하단 시트 / 위쪽 작은 팝업) ---------- */
     .overlay {
       position: fixed;
       inset: 0;
@@ -352,6 +364,20 @@
     }
     .overlay.show .sheet { transform: none; }
 
+    /* 이름 입력 팝업은 키보드에 가리지 않게 화면 위쪽에 띄움 */
+    .overlay.top .sheet {
+      top: 12vh;
+      bottom: auto;
+      left: 16px;
+      right: 16px;
+      max-width: 388px;
+      border-radius: 20px;
+      padding: 18px 18px 20px;
+      transform: translateY(-16px);
+    }
+    .overlay.top.show .sheet { transform: none; }
+    .overlay.top .handle { display: none; }
+
     .handle {
       width: 40px;
       height: 4px;
@@ -376,6 +402,24 @@
     .who-list li:last-child { border-bottom: none; }
     .who-list .emo { font-size: 22px; }
 
+    /* "누구를 뺄까요?" 선택 목록 */
+    .pick-list { display: flex; flex-direction: column; gap: 8px; }
+    .pick-list button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 50px;
+      padding: 0 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+    .pick-list .emo { font-size: 22px; }
+
     .emoji-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -392,6 +436,46 @@
     .emoji-grid button.cur { border-color: var(--accent); background: var(--accent-soft); }
     .emoji-grid button:disabled { opacity: 0.2; cursor: default; }
 
+    /* 빈자리 채우기 팝업: 이모지 버튼 + 이름 입력 + 저장 */
+    .add-row { display: flex; gap: 8px; }
+    .emoji-btn {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      background: #fcfbfe;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .add-row input {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--text);
+      background: #fcfbfe;
+      outline: none;
+    }
+    .add-row input:focus { border-color: var(--accent); }
+    .save-btn {
+      height: 46px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff !important;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .add-sheet .emoji-grid { margin-top: 14px; }
+    .add-sheet .emoji-grid button { font-size: 22px; border-radius: 12px; }
+
     .btn-row { display: flex; gap: 10px; }
     .btn {
       flex: 1;
@@ -404,6 +488,7 @@
     }
     .btn.ghost { background: #f1eef6; }
     .btn.danger { background: var(--sun); color: #fff; }
+    .btn.full { width: 100%; flex: none; }
 
     /* ---------- 안내 토스트 ---------- */
     .toast {
@@ -428,13 +513,23 @@
 </head>
 <body>
   <div class="app">
-    <h1>모일날</h1>
+    <header class="top">
+      <h1>모일날</h1>
+      <button id="gearBtn" class="gear" aria-label="설정">⚙️</button>
+    </header>
 
     <section class="card people">
-      <div class="add-row">
-        <button id="emojiBtn" class="emoji-btn" aria-label="이모지 고르기"></button>
-        <input id="nameInput" type="text" placeholder="이름 입력" maxlength="10" autocomplete="off">
-        <button id="addBtn" class="add-btn">추가</button>
+      <div class="people-top">
+        <div class="stepper">
+          <span class="icon">👥</span>
+          <button id="minusBtn" aria-label="인원 줄이기">−</button>
+          <span id="sizeLabel"></span>
+          <button id="plusBtn" aria-label="인원 늘리기">+</button>
+        </div>
+        <div id="progress" class="progress">
+          <div class="bar"><i id="barFill"></i></div>
+          <span id="progressText"></span>
+        </div>
       </div>
       <div id="chips" class="chips"></div>
       <div id="hint" class="hint"></div>
@@ -482,29 +577,39 @@
     ];
     const MAX_PEOPLE = 15;
     const MIN_PEOPLE = 2;
+    const DEFAULT_SIZE = 4;
     const MAX_FACES = 2;
     const STORAGE_KEY = 'moilnal-v1';
     const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 
     // ===== 저장/불러오기 =====
-    // participants: [{ id, name, emoji }]
+    // size: 전체 인원수 (이름 있는 사람 + 빈자리)
+    // participants: [{ id, name, emoji, done }]  done = 응답 완료 여부
     // marks: { '2026-11-12': [참여자 id, ...] }  ← 그날 안 되는 사람들
     // selectedId: 지금 입력 중인 사람 (null이면 보기 모드, 저장하지 않음)
+    function freshState() {
+      return { size: DEFAULT_SIZE, participants: [], marks: {}, selectedId: null };
+    }
+
     function load() {
-      const s = { participants: [], marks: {}, selectedId: null };
+      const s = freshState();
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (saved && Array.isArray(saved.participants)) {
-          s.participants = saved.participants;
+          s.participants = saved.participants.map(p => ({ ...p, done: !!p.done }));
           s.marks = saved.marks || {};
+          // 예전 데이터에는 인원수가 없으므로 현재 참여자 수로 시작
+          s.size = Number.isInteger(saved.size) ? saved.size : (s.participants.length || DEFAULT_SIZE);
         }
       } catch (e) {}
+      s.size = Math.min(MAX_PEOPLE, Math.max(MIN_PEOPLE, s.size, s.participants.length));
       return s;
     }
 
     function save() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          size: state.size,
           participants: state.participants,
           marks: state.marks
         }));
@@ -512,7 +617,7 @@
     }
 
     let state = load();
-    let newEmoji = null;   // 이름 입력칸 왼쪽 이모지 버튼에 들어갈 이모지
+    let newEmoji = null;   // 빈자리를 채울 때 자동으로 들어갈 이모지
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -538,6 +643,10 @@
 
     function usedEmojis(exceptId) {
       return state.participants.filter(p => p.id !== exceptId).map(p => p.emoji);
+    }
+
+    function emptySlots() {
+      return state.size - state.participants.length;
     }
 
     let toastTimer;
@@ -579,46 +688,69 @@
       el.addEventListener('contextmenu', e => e.preventDefault());
     }
 
-    // ===== 하단 시트 =====
+    // ===== 팝업 =====
+    // position: 'bottom'(기본, 하단 시트) 또는 'top'(키보드 입력용 위쪽 팝업)
     let sheetOpenedAt = 0;
-    function openSheet(build) {
+    function openSheet(build, position) {
       const body = $('sheetBody');
       body.innerHTML = '';
+      body.className = '';
       build(body);
       sheetOpenedAt = Date.now();
+      $('overlay').classList.toggle('top', position === 'top');
       $('overlay').classList.add('show');
     }
     function closeSheet() {
       $('overlay').classList.remove('show');
+      document.activeElement && document.activeElement.blur();
     }
     $('overlay').addEventListener('click', e => {
       if (e.target === $('overlay') && Date.now() - sheetOpenedAt > 300) closeSheet();
     });
 
-    // 24개 이모지 그리드 팝업. used: 고를 수 없는(이미 쓰인) 이모지들
-    function openEmojiPicker(title, currentEmoji, used, onPick) {
+    // 확인 팝업 (취소 / 실행)
+    function confirmSheet(title, desc, okLabel, onOk) {
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', title), h('p', 'sheet-desc', desc));
+        const row = h('div', 'btn-row');
+        const cancelBtn = h('button', 'btn ghost', '취소');
+        const okBtn = h('button', 'btn danger', okLabel);
+        cancelBtn.addEventListener('click', closeSheet);
+        okBtn.addEventListener('click', () => { onOk(); closeSheet(); render(); });
+        row.append(cancelBtn, okBtn);
+        body.append(row);
+      });
+    }
+
+    // 24개 이모지 그리드. used: 고를 수 없는(이미 쓰인) 이모지들
+    function emojiGrid(currentEmoji, used, onPick) {
+      const grid = h('div', 'emoji-grid');
+      for (const emoji of EMOJIS) {
+        const btn = h('button', emoji === currentEmoji ? 'cur' : '', emoji);
+        if (used.includes(emoji)) btn.disabled = true;
+        btn.addEventListener('click', () => onPick(emoji));
+        grid.append(btn);
+      }
+      return grid;
+    }
+
+    function openEmojiPicker(person) {
       openSheet(body => {
         body.append(
-          h('h3', 'sheet-title', title),
-          h('p', 'sheet-desc', '흐린 이모지는 다른 사람이 쓰고 있어요.')
-        );
-        const grid = h('div', 'emoji-grid');
-        for (const emoji of EMOJIS) {
-          const btn = h('button', emoji === currentEmoji ? 'cur' : '', emoji);
-          if (used.includes(emoji)) btn.disabled = true;
-          btn.addEventListener('click', () => {
-            onPick(emoji);
+          h('h3', 'sheet-title', `${person.name} 님의 캐릭터 고르기`),
+          h('p', 'sheet-desc', '흐린 이모지는 다른 사람이 쓰고 있어요.'),
+          emojiGrid(person.emoji, usedEmojis(person.id), emoji => {
+            person.emoji = emoji;
+            save();
             closeSheet();
             render();
-          });
-          grid.append(btn);
-        }
-        body.append(grid);
+          })
+        );
       });
     }
 
     // ===== 참여자 =====
-    // 새로 추가할 사람의 이모지: 아직 안 쓰인 것 중 하나를 자동으로
+    // 빈자리를 채울 사람의 이모지: 아직 안 쓰인 것 중 하나를 자동으로
     function ensureNewEmoji() {
       const used = usedEmojis();
       if (!newEmoji || used.includes(newEmoji)) {
@@ -627,84 +759,157 @@
       }
     }
 
-    function addPerson() {
-      const input = $('nameInput');
-      const name = input.value.trim();
-      if (!name) return toast('이름을 입력해주세요');
-      if (state.participants.length >= MAX_PEOPLE) return toast(`최대 ${MAX_PEOPLE}명까지 추가할 수 있어요`);
-      if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
-
+    // 빈자리 칩을 누르면: 이모지 버튼 + 이름 입력 + 저장
+    function openFillSlot() {
       ensureNewEmoji();
-      const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      state.participants.push({ id, name, emoji: newEmoji });
-      state.selectedId = id;   // 방금 추가한 사람이 바로 입력할 수 있게 (입력 모드로 전환)
-      toast(`${newEmoji} ${name} 님 입력 중이에요`);
-      newEmoji = null;   // 다음 사람을 위해 새로 뽑음
-      input.value = '';
-      save();
-      render();
-    }
-
-    function deletePerson(person) {
+      let input;
       openSheet(body => {
-        body.append(
-          h('h3', 'sheet-title', `${person.emoji} ${person.name} 님을 삭제할까요?`),
-          h('p', 'sheet-desc', '표시한 안 되는 날도 함께 지워져요.')
-        );
-        const row = h('div', 'btn-row');
-        const cancelBtn = h('button', 'btn ghost', '취소');
-        const okBtn = h('button', 'btn danger', '삭제');
-        cancelBtn.addEventListener('click', closeSheet);
-        okBtn.addEventListener('click', () => {
-          state.participants = state.participants.filter(p => p.id !== person.id);
-          for (const key of Object.keys(state.marks)) {
-            state.marks[key] = state.marks[key].filter(id => id !== person.id);
-            if (state.marks[key].length === 0) delete state.marks[key];
-          }
-          if (state.selectedId === person.id) state.selectedId = null;
+        body.className = 'add-sheet';
+        body.append(h('h3', 'sheet-title', '내 이름 넣기'),
+                    h('p', 'sheet-desc', '이모지를 누르면 캐릭터를 바꿀 수 있어요.'));
+
+        const row = h('div', 'add-row');
+        const emoBtn = h('button', 'emoji-btn', newEmoji);
+        emoBtn.setAttribute('aria-label', '이모지 고르기');
+        input = h('input');
+        input.type = 'text';
+        input.placeholder = '이름';
+        input.maxLength = 10;
+        input.autocomplete = 'off';
+        const saveBtn = h('button', 'save-btn', '저장');
+        row.append(emoBtn, input, saveBtn);
+        body.append(row);
+
+        // 이모지 버튼을 누르면 같은 팝업 안에 24개 그리드를 펼침
+        let grid = null;
+        emoBtn.addEventListener('click', () => {
+          if (grid) { grid.remove(); grid = null; return; }
+          grid = emojiGrid(newEmoji, usedEmojis(), emoji => {
+            newEmoji = emoji;
+            emoBtn.textContent = emoji;
+            grid.remove();
+            grid = null;
+            input.focus();
+          });
+          body.append(grid);
+        });
+
+        const submit = () => {
+          const name = input.value.trim();
+          if (!name) return toast('이름을 입력해주세요');
+          if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
+          if (emptySlots() <= 0) return toast('빈자리가 없어요');
+
+          const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          state.participants.push({ id, name, emoji: newEmoji, done: false });
+          state.selectedId = id;   // 저장하면 바로 그 사람 입력 모드로
+          toast(`${newEmoji} ${name} 님, 안 되는 날을 눌러주세요`);
+          newEmoji = null;
           save();
           closeSheet();
           render();
-          toast('삭제했어요');
+        };
+        saveBtn.addEventListener('click', submit);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submit(); }
         });
-        row.append(cancelBtn, okBtn);
-        body.append(row);
+      }, 'top');
+      input.focus();
+    }
+
+    function removePerson(person) {
+      state.participants = state.participants.filter(p => p.id !== person.id);
+      for (const key of Object.keys(state.marks)) {
+        state.marks[key] = state.marks[key].filter(id => id !== person.id);
+        if (state.marks[key].length === 0) delete state.marks[key];
+      }
+      if (state.selectedId === person.id) state.selectedId = null;
+    }
+
+    // ===== 인원 조절 =====
+    function changeSize(delta) {
+      if (delta > 0) {
+        if (state.size >= MAX_PEOPLE) return toast(`최대 ${MAX_PEOPLE}명까지예요`);
+        state.size++;
+        save();
+        return render();
+      }
+
+      if (state.size <= MIN_PEOPLE) return toast(`최소 ${MIN_PEOPLE}명이에요`);
+      if (emptySlots() > 0) {          // 빈자리부터 제거
+        state.size--;
+        save();
+        return render();
+      }
+
+      // 빈자리가 없으면 누구를 뺄지 고르기
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', '누구를 뺄까요?'),
+                    h('p', 'sheet-desc', '뺀 사람이 표시한 날도 함께 지워져요.'));
+        const list = h('div', 'pick-list');
+        for (const person of state.participants) {
+          const btn = h('button');
+          btn.append(h('span', 'emo', person.emoji), h('span', '', person.name));
+          btn.addEventListener('click', () => {
+            confirmSheet(`${person.emoji} ${person.name} 님을 뺄까요?`,
+              '표시한 안 되는 날도 함께 지워지고, 되돌릴 수 없어요.', '빼기', () => {
+                removePerson(person);
+                state.size--;
+                save();
+                toast(`${person.name} 님을 뺐어요`);
+              });
+          });
+          list.append(btn);
+        }
+        body.append(list);
       });
     }
 
     function renderPeople() {
-      ensureNewEmoji();
-      $('emojiBtn').textContent = newEmoji;
+      const size = state.size;
+      const answered = state.participants.filter(p => p.done).length;
+      const allDone = answered === size;
 
+      // 맨 위 한 줄: 인원 + 진행 상황
+      $('sizeLabel').textContent = `${size}명`;
+      $('minusBtn').disabled = size <= MIN_PEOPLE;
+      $('plusBtn').disabled = size >= MAX_PEOPLE;
+      $('barFill').style.width = `${(answered / size) * 100}%`;
+      $('progressText').textContent = allDone ? '모두 응답 🎉' : `${answered}/${size} 응답`;
+      $('progress').classList.toggle('all', allDone);
+
+      // 칩: 이름 있는 사람들 → 빈자리들
       const chips = $('chips');
       chips.innerHTML = '';
 
       for (const person of state.participants) {
-        const chip = h('div', 'chip' + (person.id === state.selectedId ? ' sel' : ''));
-        const emo = h('span', 'emo', person.emoji);
-        const nm = h('span', 'nm', person.name);
-        const del = h('button', 'del', '×');
-        del.setAttribute('aria-label', `${person.name} 삭제`);
-        chip.append(emo, nm, del);
+        let cls = 'chip';
+        if (person.id === state.selectedId) cls += ' sel';
+        if (!person.done) cls += ' pending';
+        const chip = h('div', cls);
+        chip.append(h('span', 'emo', person.emoji), h('span', 'nm', person.name));
+        if (person.done) chip.append(h('span', 'check', '✓'));
 
         chip.addEventListener('click', e => {
-          if (e.target.closest('.del')) return deletePerson(person);
-          if (e.target.closest('.emo')) {
-            return openEmojiPicker(`${person.name} 님의 캐릭터 고르기`, person.emoji,
-              usedEmojis(person.id), emoji => { person.emoji = emoji; save(); });
-          }
-          // 이름 부분: 입력할 사람 선택 / 이미 선택된 사람이면 보기 모드로
+          if (e.target.closest('.emo')) return openEmojiPicker(person);
+          // 이름 부분: 입력 모드 / 이미 선택된 사람이면 보기 모드로
           state.selectedId = state.selectedId === person.id ? null : person.id;
           render();
         });
         chips.append(chip);
       }
 
-      // 상황에 맞는 안내 문구
+      for (let i = 0; i < emptySlots(); i++) {
+        const chip = h('div', 'chip empty');
+        chip.append(h('span', 'emo', '❔'), h('span', 'nm', '빈자리'));
+        chip.addEventListener('click', openFillSlot);
+        chips.append(chip);
+      }
+
+      // 안내 문구
       const hint = $('hint');
       hint.className = 'hint';
       hint.innerHTML = '';
-      const count = state.participants.length;
       const sel = findPerson(state.selectedId);
 
       if (sel) {
@@ -712,15 +917,37 @@
         const text = h('span');
         text.append(h('b', '', `${sel.emoji} ${sel.name}`), ' 님 입력 중');
         const done = h('button', 'done-btn', '완료');
-        done.addEventListener('click', () => { state.selectedId = null; render(); });
+        done.addEventListener('click', () => {
+          sel.done = true;            // 완료 = 응답 완료 저장
+          state.selectedId = null;
+          save();
+          render();
+          toast('응답 완료! 이름을 다시 누르면 고칠 수 있어요');
+        });
         hint.append(text, done);
-      } else if (count === 0) {
-        hint.textContent = `함께할 사람 이름을 추가해주세요 (${MIN_PEOPLE}~${MAX_PEOPLE}명)`;
-      } else if (count < MIN_PEOPLE) {
-        hint.textContent = `${MIN_PEOPLE - count}명 더 추가해주세요`;
+      } else if (emptySlots() > 0) {
+        hint.textContent = '빈자리를 눌러 내 이름을 넣어보세요';
       } else {
-        hint.textContent = '내 이름을 누르면 안 되는 날을 입력할 수 있어요 · 이모지를 누르면 캐릭터 변경';
+        hint.textContent = '이름을 누르면 입력, 이모지를 누르면 캐릭터 변경';
       }
+    }
+
+    // ===== 설정 =====
+    function openSettings() {
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', '설정'));
+        const resetBtn = h('button', 'btn ghost full', '처음부터 다시 만들기');
+        resetBtn.addEventListener('click', () => {
+          confirmSheet('처음부터 다시 만들까요?',
+            '모든 참여자와 표시한 날이 지워지고, 되돌릴 수 없어요.', '초기화', () => {
+              try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+              state = freshState();
+              newEmoji = null;
+              toast('새로 시작했어요');
+            });
+        });
+        body.append(resetBtn);
+      });
     }
 
     // ===== 달력 =====
@@ -775,7 +1002,6 @@
 
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month + 1, 0).getDate();
-      const total = state.participants.length;
 
       for (let i = 0; i < firstDay; i++) grid.append(h('div'));
 
@@ -795,8 +1021,8 @@
 
         const people = unavailablePeople(key);
         if (people.length > 0) {
-          // 안 되는 사람 비율이 높을수록 배경을 진하게
-          const ratio = people.length / total;
+          // 전체 인원 중 안 되는 사람 비율이 높을수록 배경을 진하게
+          const ratio = Math.min(1, people.length / state.size);
           cell.style.background = `rgba(var(--no-rgb), ${(0.08 + 0.4 * ratio).toFixed(2)})`;
 
           const faces = h('div', 'faces');
@@ -807,7 +1033,7 @@
           }
           if (people.length > MAX_FACES) faces.append(h('span', 'more', `+${people.length - MAX_FACES}`));
           cell.append(faces, h('span', 'cnt', `${people.length}명`));
-        } else if (total > 0 && !isPast) {
+        } else if (state.participants.length > 0 && !isPast) {
           cell.classList.add('allok');
         }
 
@@ -831,19 +1057,9 @@
     }
 
     // ===== 이벤트 연결 =====
-    $('emojiBtn').addEventListener('click', () => {
-      ensureNewEmoji();
-      openEmojiPicker('새 참여자의 캐릭터 고르기', newEmoji, usedEmojis(),
-        emoji => { newEmoji = emoji; });
-    });
-
-    $('addBtn').addEventListener('click', addPerson);
-    $('nameInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.isComposing) {
-        e.preventDefault();
-        addPerson();
-      }
-    });
+    $('minusBtn').addEventListener('click', () => changeSize(-1));
+    $('plusBtn').addEventListener('click', () => changeSize(1));
+    $('gearBtn').addEventListener('click', openSettings);
 
     $('prev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
