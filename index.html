@@ -38,12 +38,13 @@
     /* ---------- 상단: 앱 이름 + 설정 ---------- */
     .top { position: relative; margin-bottom: 16px; }
 
+    /* 앱 이름은 작게 (그 아래 모임명이 크게) */
     h1 {
-      font-size: 26px;
+      font-size: 15px;
       font-weight: 800;
+      line-height: 40px;
       text-align: center;
       color: var(--accent);
-      letter-spacing: -0.5px;
     }
 
     .gear {
@@ -622,68 +623,256 @@
       font-weight: 600;
       padding: 10px 18px;
       border-radius: 20px;
-      white-space: nowrap;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      line-height: 1.4;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s, transform 0.2s;
       z-index: 20;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------- 공유 버전 추가 ---------- */
+    /* 상단 왼쪽: 링크 복사 */
+    .link-btn {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 34px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(120, 100, 160, 0.12);
+      color: var(--accent-deep) !important;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* 저장 중일 때 화면 맨 위 얇은 진행 표시 */
+    .busy-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent) no-repeat;
+      background-size: 50% 100%;
+      animation: busy 1s linear infinite;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 30;
+    }
+    .busy-bar.show { opacity: 1; }
+    @keyframes busy {
+      from { background-position: -100% 0; }
+      to { background-position: 200% 0; }
+    }
+
+    /* 초기화 되돌리기 배너 */
+    .undo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 8px 8px 8px 14px;
+      border-radius: 14px;
+      background: #fff4d6;
+      color: #8a5a00;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .undo-bar[hidden] { display: none; }
+    .undo-bar button {
+      height: 32px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #8a5a00 !important;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* 로딩 / 오류 화면 */
+    .status {
+      padding: 56px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .status .btn { display: block; margin: 18px auto 0; max-width: 240px; }
+    .status[hidden], .main[hidden] { display: none; }
+
+    /* 설정 시트 */
+    .menu { display: flex; flex-direction: column; gap: 8px; }
+    .menu button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 50px;
+      padding: 0 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu .room-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu .room-when { flex: none; font-size: 12px; color: var(--muted); font-weight: 500; }
+    .sheet-section { margin: 20px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+    .menu button.danger-text { color: var(--sun) !important; }
+
+    /* 모임명 (앱 이름 아래 크게, 탭하면 이름 수정) */
+    .room-title-row { text-align: center; margin: -10px 0 14px; }
+    .room-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 10px;
+      background: none;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      cursor: pointer;
+    }
+    .room-title-row[hidden] { display: none; }
+    .room-title .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .room-title .pen { flex: none; font-size: 14px; opacity: 0.55; }
+
+    /* 내 모임 목록: 이름 + 정보, 오른쪽 ⋯ */
+    .room-list { display: flex; flex-direction: column; gap: 8px; }
+    .room-row {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .room-row.current { border-color: var(--accent); background: var(--accent-soft); }
+    .room-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 9px 4px 9px 14px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+    }
+    .room-name { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .room-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .more-btn {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 12px;
+      background: none;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--muted) !important;
+      cursor: pointer;
+    }
+    .status .sub { font-size: 13px; margin-top: 4px; }
+    .copy-input {
+      width: 100%;
+      height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
+  <div id="busy" class="busy-bar"></div>
+
   <div class="app">
     <header class="top">
+      <button id="linkBtn" class="link-btn" hidden>🔗 링크 복사</button>
       <h1>모일날</h1>
-      <button id="gearBtn" class="gear" aria-label="설정">⚙️</button>
+      <button id="gearBtn" class="gear" aria-label="설정" hidden>⚙️</button>
     </header>
 
-    <section class="card people">
-      <div class="people-top">
-        <div class="stepper">
-          <span class="icon">👥</span>
-          <button id="minusBtn" aria-label="인원 줄이기">−</button>
-          <span id="sizeLabel"></span>
-          <button id="plusBtn" aria-label="인원 늘리기">+</button>
+    <div id="roomTitleRow" class="room-title-row" hidden>
+      <button id="roomTitle" class="room-title" aria-label="모임 이름 바꾸기">
+        <span id="roomTitleText" class="t"></span><span class="pen">✏️</span>
+      </button>
+    </div>
+
+    <div id="undoBar" class="undo-bar" hidden>
+      <span>초기화됨</span>
+      <button id="undoBtn">되돌리기</button>
+    </div>
+
+    <div id="status" class="status">불러오는 중…</div>
+
+    <div id="main" class="main" hidden>
+      <section class="card people">
+        <div class="people-top">
+          <div class="stepper">
+            <span class="icon">👥</span>
+            <button id="minusBtn" aria-label="인원 줄이기">−</button>
+            <span id="sizeLabel"></span>
+            <button id="plusBtn" aria-label="인원 늘리기">+</button>
+          </div>
+          <div id="progress" class="progress">
+            <div class="bar"><i id="barFill"></i></div>
+            <span id="progressText"></span>
+          </div>
         </div>
-        <div id="progress" class="progress">
-          <div class="bar"><i id="barFill"></i></div>
-          <span id="progressText"></span>
+        <div id="chips" class="chips"></div>
+        <div id="hint" class="hint"></div>
+        <div id="banner" class="banner" hidden></div>
+        <div id="rec" class="rec" hidden>
+          <div class="rec-label">✨ 추천<small id="recPending">(응답 중)</small></div>
+          <div id="recChips" class="rec-chips"></div>
         </div>
-      </div>
-      <div id="chips" class="chips"></div>
-      <div id="hint" class="hint"></div>
-      <div id="banner" class="banner" hidden></div>
-      <div id="rec" class="rec" hidden>
-        <div class="rec-label">✨ 추천<small id="recPending">(응답 중)</small></div>
-        <div id="recChips" class="rec-chips"></div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card calendar">
-      <div class="month-nav">
-        <button id="prev" aria-label="이전 달">‹</button>
-        <div id="title"></div>
-        <button id="next" aria-label="다음 달">›</button>
-      </div>
+      <section class="card calendar">
+        <div class="month-nav">
+          <button id="prev" aria-label="이전 달">‹</button>
+          <div id="title"></div>
+          <button id="next" aria-label="다음 달">›</button>
+        </div>
 
-      <div class="weekdays">
-        <div class="sun">일</div><div>월</div><div>화</div><div>수</div>
-        <div>목</div><div>금</div><div class="sat">토</div>
-      </div>
+        <div class="weekdays">
+          <div class="sun">일</div><div>월</div><div>화</div><div>수</div>
+          <div>목</div><div>금</div><div class="sat">토</div>
+        </div>
 
-      <div id="grid"></div>
+        <div id="grid"></div>
 
-      <div class="legend">
-        <span><i class="lg-today"></i>오늘</span>
-        <span><i class="lg-ok"></i>모두 가능</span>
-        <span><i class="lg-confirm"></i>확정</span>
-      </div>
-      <p class="legend-tip">
-        날짜를 누르면 안 되는 사람을 볼 수 있어요<br>
-        이름을 고른 뒤 누르면 내 안 되는 날로 표시돼요
-      </p>
-    </section>
+        <div class="legend">
+          <span><i class="lg-today"></i>오늘</span>
+          <span><i class="lg-ok"></i>모두 가능</span>
+          <span><i class="lg-confirm"></i>확정</span>
+        </div>
+        <p class="legend-tip">
+          날짜를 누르면 안 되는 사람을 볼 수 있어요<br>
+          이름을 고른 뒤 누르면 내 안 되는 날로 표시돼요
+        </p>
+      </section>
+    </div>
   </div>
 
   <div id="overlay" class="overlay">
@@ -695,7 +884,12 @@
 
   <div id="toast" class="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
   <script>
+    // ===== Supabase 연결 (공개용 publishable 키라 코드에 넣어도 됨) =====
+    const SUPABASE_URL = 'https://tkwvtgolxzthojkfzhsd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_MvRrvStiLVCCIkCX5Ktb6A_MlHF1uKk';
+
     // ===== 기본 설정 =====
     const EMOJIS = [
       '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮',
@@ -705,48 +899,63 @@
     const MIN_PEOPLE = 2;
     const DEFAULT_SIZE = 4;
     const MAX_FACES = 2;
-    const STORAGE_KEY = 'moilnal-v1';
+    const LOCAL_KEY = 'moilnal-local';
     const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 
-    // ===== 저장/불러오기 =====
-    // size: 전체 인원수 (이름 있는 사람 + 빈자리)
-    // participants: [{ id, name, emoji, done }]  done = 응답 완료 여부
-    // marks: { '2026-11-12': [참여자 id, ...] }  ← 그날 안 되는 사람들
-    // selectedId: 지금 입력 중인 사람 (null이면 보기 모드, 저장하지 않음)
-    function freshState() {
-      return { size: DEFAULT_SIZE, participants: [], marks: {}, confirmed: null, selectedId: null };
-    }
+    // 서버 오류 코드 → 안내 문구
+    const ERRORS = {
+      name_taken: '이미 있는 이름이에요',
+      emoji_taken: '다른 사람이 쓰고 있는 이모지예요',
+      room_full: '빈자리가 없어요',
+      invalid_name: '이름은 1~20자로 써주세요',
+      invalid_emoji: '고를 수 없는 이모지예요',
+      invalid_size: `인원은 ${MIN_PEOPLE}~${MAX_PEOPLE}명이에요`,
+      size_below_members: '이름이 있는 사람보다 적게 줄일 수 없어요',
+      member_not_found: '참여자를 찾을 수 없어요',
+      date_out_of_range: '고를 수 없는 날짜예요',
+      invalid_date: '고를 수 없는 날짜예요',
+      nothing_to_undo: '되돌릴 내용이 없어요 (24시간이 지났어요)',
+      room_not_found: '모임을 찾을 수 없어요',
+      room_deleted: '삭제된 모임이에요',
+      restore_expired: '삭제한 지 24시간이 지나서 복구할 수 없어요',
+      invalid_room_name: '모임 이름은 1~20자로 써주세요'
+    };
+    const DEFAULT_ROOM_NAME = '새 모임';
+    const FLASH_KEY = 'moilnal-flash';   // 다른 모임으로 이동한 뒤 보여줄 안내 (sessionStorage)
+    const NETWORK_ERROR = '연결이 불안정해요, 다시 시도해주세요';
 
-    function load() {
-      const s = freshState();
+    const db = window.supabase
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
+
+    // ===== 이 기기에만 저장 (localStorage) =====
+    // rooms: 내가 들어갔던 모임 목록 [{ id, name, label, visitedAt }]
+    // me:    모임별 "나는 누구" { 모임ID: 참여자ID }
+    function loadLocal() {
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (saved && Array.isArray(saved.participants)) {
-          s.participants = saved.participants.map(p => ({ ...p, done: !!p.done }));
-          s.marks = saved.marks || {};
-          if (saved.confirmed && saved.confirmed.key) s.confirmed = saved.confirmed;
-          // 예전 데이터에는 인원수가 없으므로 현재 참여자 수로 시작
-          s.size = Number.isInteger(saved.size) ? saved.size : (s.participants.length || DEFAULT_SIZE);
-        }
+        const s = JSON.parse(localStorage.getItem(LOCAL_KEY));
+        if (s && Array.isArray(s.rooms)) return { rooms: s.rooms, me: s.me || {} };
       } catch (e) {}
-      s.size = Math.min(MAX_PEOPLE, Math.max(MIN_PEOPLE, s.size, s.participants.length));
-      return s;
+      return { rooms: [], me: {} };
     }
-
-    function save() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          size: state.size,
-          participants: state.participants,
-          marks: state.marks,
-          confirmed: state.confirmed
-        }));
-      } catch (e) {}
+    function saveLocal() {
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(local)); } catch (e) {}
     }
+    let local = loadLocal();
 
-    let state = load();
+    // ===== 화면 상태 (서버의 get_room 결과로 채움) =====
+    let roomId = null;
+    let state = {
+      name: DEFAULT_ROOM_NAME, // 모임명
+      size: DEFAULT_SIZE,
+      participants: [],     // [{ id, name, emoji, done }]
+      marks: {},            // { '2026-11-12': [참여자 id, ...] }
+      confirmed: null,      // { key: '2026-11-07', known: [id, ...] }
+      undoUntil: null,      // 초기화 되돌리기 가능한 시각
+      selectedId: null      // 지금 입력 중인 사람 (null이면 보기 모드)
+    };
     let newEmoji = null;   // 빈자리를 채울 때 자동으로 들어갈 이모지
-    let changing = false;  // 확정 배너의 [변경]을 누른 상태 (저장하지 않음)
+    let changing = false;  // 확정 배너의 [변경]을 누른 상태
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -784,7 +993,7 @@
       t.textContent = msg;
       t.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
     }
 
     // 짧게 누르기(탭)와 길게 누르기(0.5초)를 구분
@@ -817,6 +1026,178 @@
       el.addEventListener('contextmenu', e => e.preventDefault());
     }
 
+    // ===== 서버와 주고받기 =====
+    let pending = 0;          // 진행 중인 저장 요청 수
+    let writeSeq = 0;         // 저장을 시작할 때마다 1씩 증가 (오래된 불러오기 결과 버리기용)
+    let refetchWanted = false;
+    let refetchTimer = null;
+
+    function setBusy() {
+      $('busy').classList.toggle('show', pending > 0);
+    }
+
+    function errorMessage(err) {
+      return (err && ERRORS[err.message]) || NETWORK_ERROR;
+    }
+
+    async function callRpc(name, args) {
+      if (!db) throw new Error('network');
+      const { data, error } = await db.rpc(name, args);
+      if (error) throw error;
+      return data;
+    }
+
+    // 화면을 먼저 바꾸고(optimistic) 서버에 저장. 실패하면 화면을 되돌림
+    async function write(name, args, optimistic) {
+      writeSeq++;
+      const backup = JSON.stringify({
+        name: state.name, size: state.size, participants: state.participants,
+        marks: state.marks, confirmed: state.confirmed, undoUntil: state.undoUntil
+      });
+      if (optimistic) { optimistic(); render(); }
+
+      pending++;
+      setBusy();
+      try {
+        const data = await callRpc(name, { p_room_id: roomId, ...args });
+        return { ok: true, data };
+      } catch (err) {
+        if (optimistic) {
+          const b = JSON.parse(backup);
+          Object.assign(state, b, { undoUntil: b.undoUntil ? new Date(b.undoUntil) : null });
+          render();
+        }
+        toast(errorMessage(err));
+        return { ok: false, error: err };
+      } finally {
+        pending--;
+        setBusy();
+        scheduleRefetch();   // 저장이 끝나면 서버 최신 상태로 맞춤
+      }
+    }
+
+    function scheduleRefetch() {
+      refetchWanted = true;
+      clearTimeout(refetchTimer);
+      refetchTimer = setTimeout(refetch, 300);
+    }
+
+    async function refetch() {
+      if (!roomId || pending > 0) return;   // 저장이 끝나면 다시 예약됨
+      refetchWanted = false;
+      const seq = writeSeq;
+      let data;
+      try {
+        data = await callRpc('get_room', { p_room_id: roomId });
+      } catch (err) {
+        if (err && err.message === 'room_not_found') return showNotFound();
+        return;   // 잠깐 끊긴 경우: 다음 알림/화면 복귀 때 다시 시도
+      }
+      if (seq !== writeSeq || pending > 0) {   // 불러오는 사이 새 저장이 시작됨 → 이 결과는 버림
+        scheduleRefetch();
+        return;
+      }
+      if (data.deleted) return showDeleted(data);   // 누군가 모임을 삭제함
+      if ($('main').hidden) showMain();             // 삭제됐던 모임이 복구됨
+      applyRoom(data);
+      rememberRoom(false);
+      render();
+    }
+
+    // 다른 모임 등 현재 모임이 아닌 곳에 쓰기 (화면 되돌리기 없이 안내만)
+    async function runRpc(name, args) {
+      pending++;
+      setBusy();
+      try {
+        return { ok: true, data: await callRpc(name, args) };
+      } catch (err) {
+        toast(errorMessage(err));
+        return { ok: false, error: err };
+      } finally {
+        pending--;
+        setBusy();
+      }
+    }
+
+    function applyRoom(data) {
+      state.name = data.name || DEFAULT_ROOM_NAME;
+      state.size = data.size;
+      state.participants = (data.members || []).map(m => ({
+        id: m.id, name: m.name, emoji: m.emoji, done: m.responded
+      }));
+      state.marks = data.unavailable || {};
+      state.confirmed = data.confirmed
+        ? { key: data.confirmed.date, known: data.confirmed.known || [] }
+        : null;
+      state.undoUntil = data.undo_until ? new Date(data.undo_until) : null;
+      if (state.selectedId && !findPerson(state.selectedId)) state.selectedId = null;
+    }
+
+    // ===== 내 모임 목록 =====
+    function roomLabel() {
+      let s = state.participants.map(p => p.emoji).join('') || '빈 모임';
+      if (state.confirmed) s += ` · ${shortLabel(keyToDate(state.confirmed.key))} 확정`;
+      return s;
+    }
+
+    function rememberRoom(visit) {
+      const i = local.rooms.findIndex(r => r.id === roomId);
+      const prev = i >= 0 ? local.rooms[i] : null;
+      const entry = {
+        id: roomId,
+        name: state.name,
+        label: roomLabel(),
+        visitedAt: visit || !prev ? Date.now() : prev.visitedAt
+      };
+      if (i >= 0) local.rooms[i] = entry;
+      else local.rooms.push(entry);
+      local.rooms.sort((a, b) => b.visitedAt - a.visitedAt);
+      local.rooms = local.rooms.slice(0, 30);
+      saveLocal();
+    }
+
+    function forgetRoom(id) {
+      local.rooms = local.rooms.filter(r => r.id !== id);
+      delete local.me[id];
+      saveLocal();
+    }
+
+    function setLocalName(id, name) {
+      const r = local.rooms.find(x => x.id === id);
+      if (r) { r.name = name; saveLocal(); }
+    }
+
+    // 지금 모임에서 나가기: 목록의 다른 모임으로, 없으면 새 모임. 안내 문구는 이동 후 표시
+    function leaveCurrent(message) {
+      try { if (message) sessionStorage.setItem(FLASH_KEY, message); } catch (e) {}
+      if (local.rooms.length) goRoom(local.rooms[0].id);
+      else createAndGo();
+    }
+
+    function goRoom(id) {
+      location.assign(location.pathname + '?g=' + encodeURIComponent(id));
+    }
+
+    async function createAndGo() {
+      pending++;
+      setBusy();
+      try {
+        goRoom(await callRpc('create_room', {}));
+      } catch (err) {
+        toast(NETWORK_ERROR);
+      } finally {
+        pending--;
+        setBusy();
+      }
+    }
+
+    function whenLabel(ts) {
+      const days = Math.floor((Date.now() - ts) / 86400000);
+      if (days <= 0) return '오늘';
+      if (days === 1) return '어제';
+      return `${days}일 전`;
+    }
+
     // ===== 팝업 =====
     // position: 'bottom'(기본, 하단 시트) 또는 'top'(키보드 입력용 위쪽 팝업)
     let sheetOpenedAt = 0;
@@ -837,8 +1218,7 @@
       if (e.target === $('overlay') && Date.now() - sheetOpenedAt > 300) closeSheet();
     });
 
-    // 확인 팝업 (취소 / 실행)
-    // kind: 'danger'(빨강, 삭제류) 또는 'primary'(보라, 확정류)
+    // 확인 팝업 (취소 / 실행). kind: 'danger'(빨강) 또는 'primary'(보라)
     function confirmSheet(title, desc, okLabel, onOk, kind = 'danger') {
       openSheet(body => {
         body.append(h('h3', 'sheet-title', title), h('p', 'sheet-desc', desc));
@@ -846,7 +1226,7 @@
         const cancelBtn = h('button', 'btn ghost', '취소');
         const okBtn = h('button', 'btn ' + kind, okLabel);
         cancelBtn.addEventListener('click', closeSheet);
-        okBtn.addEventListener('click', () => { onOk(); closeSheet(); render(); });
+        okBtn.addEventListener('click', () => { closeSheet(); onOk(); });
         row.append(cancelBtn, okBtn);
         body.append(row);
       });
@@ -870,10 +1250,9 @@
           h('h3', 'sheet-title', `${person.name} 님의 캐릭터 고르기`),
           h('p', 'sheet-desc', '흐린 이모지는 다른 사람이 쓰고 있어요.'),
           emojiGrid(person.emoji, usedEmojis(person.id), emoji => {
-            person.emoji = emoji;
-            save();
             closeSheet();
-            render();
+            write('save_member', { p_member_id: person.id, p_name: person.name, p_emoji: emoji },
+              () => { person.emoji = emoji; });
           })
         );
       });
@@ -904,7 +1283,7 @@
         input = h('input');
         input.type = 'text';
         input.placeholder = '이름';
-        input.maxLength = 10;
+        input.maxLength = 20;
         input.autocomplete = 'off';
         const saveBtn = h('button', 'save-btn', '저장');
         row.append(emoBtn, input, saveBtn);
@@ -924,20 +1303,31 @@
           body.append(grid);
         });
 
-        const submit = () => {
+        let saving = false;
+        const submit = async () => {
+          if (saving) return;
           const name = input.value.trim();
           if (!name) return toast('이름을 입력해주세요');
           if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
           if (emptySlots() <= 0) return toast('빈자리가 없어요');
 
-          const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          state.participants.push({ id, name, emoji: newEmoji, done: false });
-          state.selectedId = id;   // 저장하면 바로 그 사람 입력 모드로
-          toast(`${newEmoji} ${name} 님, 안 되는 날을 눌러주세요`);
+          saving = true;
+          saveBtn.disabled = true;
+          const emoji = newEmoji;
+          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
+          saving = false;
+          saveBtn.disabled = false;
+          if (!res.ok) return;
+
+          const id = res.data;
+          if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
+          state.selectedId = id;          // 저장하면 바로 그 사람 입력 모드로
+          local.me[roomId] = id;          // 이 기기에서 "나는 이 사람"
+          saveLocal();
           newEmoji = null;
-          save();
           closeSheet();
           render();
+          toast(`${emoji} ${name} 님, 안 되는 날을 눌러주세요`);
         };
         saveBtn.addEventListener('click', submit);
         input.addEventListener('keydown', e => {
@@ -947,29 +1337,18 @@
       input.focus();
     }
 
-    function removePerson(person) {
-      state.participants = state.participants.filter(p => p.id !== person.id);
-      for (const key of Object.keys(state.marks)) {
-        state.marks[key] = state.marks[key].filter(id => id !== person.id);
-        if (state.marks[key].length === 0) delete state.marks[key];
-      }
-      if (state.selectedId === person.id) state.selectedId = null;
-    }
-
     // ===== 인원 조절 =====
     function changeSize(delta) {
       if (delta > 0) {
         if (state.size >= MAX_PEOPLE) return toast(`최대 ${MAX_PEOPLE}명까지예요`);
-        state.size++;
-        save();
-        return render();
+        const size = state.size + 1;
+        return write('set_room_size', { p_size: size }, () => { state.size = size; });
       }
 
       if (state.size <= MIN_PEOPLE) return toast(`최소 ${MIN_PEOPLE}명이에요`);
       if (emptySlots() > 0) {          // 빈자리부터 제거
-        state.size--;
-        save();
-        return render();
+        const size = state.size - 1;
+        return write('set_room_size', { p_size: size }, () => { state.size = size; });
       }
 
       // 빈자리가 없으면 누구를 뺄지 고르기
@@ -982,11 +1361,17 @@
           btn.append(h('span', 'emo', person.emoji), h('span', '', person.name));
           btn.addEventListener('click', () => {
             confirmSheet(`${person.emoji} ${person.name} 님을 뺄까요?`,
-              '표시한 안 되는 날도 함께 지워지고, 되돌릴 수 없어요.', '빼기', () => {
-                removePerson(person);
-                state.size--;
-                save();
-                toast(`${person.name} 님을 뺐어요`);
+              '표시한 안 되는 날도 함께 지워지고, 되돌릴 수 없어요.', '빼기', async () => {
+                const res = await write('delete_member', { p_member_id: person.id }, () => {
+                  state.participants = state.participants.filter(p => p.id !== person.id);
+                  for (const key of Object.keys(state.marks)) {
+                    state.marks[key] = state.marks[key].filter(id => id !== person.id);
+                    if (!state.marks[key].length) delete state.marks[key];
+                  }
+                  if (state.selectedId === person.id) state.selectedId = null;
+                  state.size = Math.max(MIN_PEOPLE, state.size - 1);
+                });
+                if (res.ok) toast(`${person.name} 님을 뺐어요`);
               });
           });
           list.append(btn);
@@ -1023,7 +1408,13 @@
         chip.addEventListener('click', e => {
           if (e.target.closest('.emo')) return openEmojiPicker(person);
           // 이름 부분: 입력 모드 / 이미 선택된 사람이면 보기 모드로
-          state.selectedId = state.selectedId === person.id ? null : person.id;
+          if (state.selectedId === person.id) {
+            state.selectedId = null;
+          } else {
+            state.selectedId = person.id;
+            local.me[roomId] = person.id;   // 이 기기에서 "나는 이 사람"
+            saveLocal();
+          }
           render();
         });
         chips.append(chip);
@@ -1047,12 +1438,11 @@
         const text = h('span');
         text.append(h('b', '', `${sel.emoji} ${sel.name}`), ' 님 입력 중');
         const done = h('button', 'done-btn', '완료');
-        done.addEventListener('click', () => {
-          sel.done = true;            // 완료 = 응답 완료 저장
+        done.addEventListener('click', async () => {
           state.selectedId = null;
-          save();
-          render();
-          toast('응답 완료! 이름을 다시 누르면 고칠 수 있어요');
+          const res = await write('set_responded', { p_member_id: sel.id, p_responded: true },
+            () => { sel.done = true; });   // 완료 = 응답 완료 저장
+          if (res.ok) toast('응답 완료! 이름을 다시 누르면 고칠 수 있어요');
         });
         hint.append(text, done);
       } else if (changing && activeConfirmed()) {
@@ -1137,20 +1527,20 @@
       }
       if (prev && prev.key !== key) desc += ` · 기존 확정(${shortLabel(keyToDate(prev.key))})은 취소돼요`;
 
-      confirmSheet(title, desc, '확정하기', () => {
-        state.confirmed = { key, known: people.map(p => p.id) };   // 확정은 한 번에 하나만
+      confirmSheet(title, desc, '확정하기', async () => {
         changing = false;
-        save();
-        toast(`📌 ${label}로 확정했어요`);
+        const res = await write('set_confirmed_date', { p_day: key }, () => {
+          state.confirmed = { key, known: people.map(p => p.id) };   // 확정은 한 번에 하나만
+        });
+        if (res.ok) toast(`📌 ${label}로 확정했어요`);
       }, 'primary');
     }
 
     function cancelConfirm(date) {
-      confirmSheet('확정을 취소할까요?', `${shortLabel(date)} 확정이 취소돼요.`, '확정 취소', () => {
-        state.confirmed = null;
+      confirmSheet('확정을 취소할까요?', `${shortLabel(date)} 확정이 취소돼요.`, '확정 취소', async () => {
         changing = false;
-        save();
-        toast('확정을 취소했어요');
+        const res = await write('set_confirmed_date', { p_day: null }, () => { state.confirmed = null; });
+        if (res.ok) toast('확정을 취소했어요');
       });
     }
 
@@ -1212,35 +1602,213 @@
       setTimeout(() => showDayDetail(date, key), 700);
     }
 
-    // ===== 설정 =====
+    // ===== 설정 (⚙️) =====
     function openSettings() {
       openSheet(body => {
         body.append(h('h3', 'sheet-title', '설정'));
-        const resetBtn = h('button', 'btn ghost full', '처음부터 다시 만들기');
+        const menu = h('div', 'menu');
+
+        const newBtn = h('button', '', '➕ 새 모임 만들기');
+        newBtn.addEventListener('click', () => { closeSheet(); createAndGo(); });
+
+        const resetBtn = h('button', '', '🔄 처음부터 다시 만들기');
         resetBtn.addEventListener('click', () => {
-          confirmSheet('처음부터 다시 만들까요?',
-            '모든 참여자와 표시한 날이 지워지고, 되돌릴 수 없어요.', '초기화', () => {
-              try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-              state = freshState();
-              newEmoji = null;
+          confirmSheet('정말 처음부터 다시 만들까요?',
+            '모든 참여자의 입력과 확정 날짜가 지워져요. 친구들 화면에도 바로 반영돼요. (24시간 안에는 되돌릴 수 있어요)',
+            '처음부터', async () => {
               changing = false;
-              toast('새로 시작했어요');
+              const res = await write('reset_room', {}, () => {
+                state.size = DEFAULT_SIZE;
+                state.participants = [];
+                state.marks = {};
+                state.confirmed = null;
+                state.selectedId = null;
+                state.undoUntil = new Date(Date.now() + 86400000);
+              });
+              if (res.ok) toast('처음부터 다시 시작해요');
             });
         });
-        body.append(resetBtn);
+
+        menu.append(newBtn, resetBtn);
+        body.append(menu);
+
+        // 내 모임 목록 (지금 모임 포함). 오른쪽 ⋯ 로 이름 바꾸기 / 목록에서 삭제 / 모임 삭제
+        if (local.rooms.length) {
+          body.append(h('div', 'sheet-section', '내 모임'));
+          const list = h('div', 'room-list');
+          for (const r of local.rooms) {
+            const isCurrent = r.id === roomId;
+            const row = h('div', 'room-row' + (isCurrent ? ' current' : ''));
+            const main = h('button', 'room-main');
+            const sub = [isCurrent ? '지금 보는 모임' : whenLabel(r.visitedAt), r.label].filter(Boolean).join(' · ');
+            main.append(h('span', 'room-name', r.name || DEFAULT_ROOM_NAME), h('span', 'room-sub', sub));
+            main.addEventListener('click', () => { if (isCurrent) closeSheet(); else goRoom(r.id); });
+            const more = h('button', 'more-btn', '⋯');
+            more.setAttribute('aria-label', `${r.name || DEFAULT_ROOM_NAME} 더보기`);
+            more.addEventListener('click', () => openRoomMore(r));
+            row.append(main, more);
+            list.append(row);
+          }
+          body.append(list);
+        }
       });
+    }
+
+    // 내 모임 항목의 ⋯ 메뉴
+    function openRoomMore(r) {
+      const name = r.name || DEFAULT_ROOM_NAME;
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', name));
+        const menu = h('div', 'menu');
+
+        const renameBtn = h('button', '', '✏️ 이름 바꾸기');
+        renameBtn.addEventListener('click', () => openRename(r.id, name));
+
+        const removeBtn = h('button', '', '🙈 내 목록에서 삭제');
+        removeBtn.addEventListener('click', () => {
+          confirmSheet('내 목록에서 삭제할까요?',
+            '내 목록에서만 사라져요. 친구들은 계속 볼 수 있고, 링크로 다시 들어올 수 있어요',
+            '목록에서 삭제', () => {
+              forgetRoom(r.id);
+              if (r.id === roomId) leaveCurrent(`'${name}'을(를) 내 목록에서 삭제했어요`);
+              else toast('내 목록에서 삭제했어요');
+            }, 'primary');
+        });
+
+        const deleteBtn = h('button', 'danger-text', '🗑️ 모임 삭제');
+        deleteBtn.addEventListener('click', () => {
+          confirmSheet(`'${name}' 모임을 삭제할까요?`,
+            '모든 참여자에게서 이 모임이 삭제돼요. 24시간 안에는 복구할 수 있어요. 삭제할까요?',
+            '삭제', () => deleteRoom(r.id, name));
+        });
+
+        menu.append(renameBtn, removeBtn, deleteBtn);
+        body.append(menu);
+      });
+    }
+
+    // 모임 이름 바꾸기 팝업 (지금 모임 / 목록의 다른 모임 모두)
+    function openRename(id, currentName) {
+      let input;
+      openSheet(body => {
+        body.className = 'add-sheet';
+        body.append(h('h3', 'sheet-title', '모임 이름'),
+                    h('p', 'sheet-desc', '친구들 화면에도 바로 바뀌어요.'));
+        const row = h('div', 'add-row');
+        input = h('input');
+        input.type = 'text';
+        input.value = currentName;
+        input.maxLength = 20;
+        input.autocomplete = 'off';
+        const saveBtn = h('button', 'save-btn', '저장');
+        row.append(input, saveBtn);
+        body.append(row);
+
+        let saving = false;
+        const submit = async () => {
+          if (saving) return;
+          const name = input.value.trim();
+          if (!name) return toast('모임 이름을 입력해주세요');
+          if (name === currentName) return closeSheet();
+          saving = true;
+          saveBtn.disabled = true;
+          const res = id === roomId
+            ? await write('set_room_name', { p_name: name }, () => { state.name = name; })
+            : await runRpc('set_room_name', { p_room_id: id, p_name: name });
+          saving = false;
+          saveBtn.disabled = false;
+          if (!res.ok) return;
+          setLocalName(id, name);
+          closeSheet();
+          toast('모임 이름을 바꿨어요');
+        };
+        saveBtn.addEventListener('click', submit);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submit(); }
+        });
+      }, 'top');
+      input.focus();
+      input.select();
+    }
+
+    // 모임 삭제 (모든 참여자에게서 삭제, 24시간 안에 복구 가능)
+    async function deleteRoom(id, name) {
+      const res = await runRpc('delete_room', { p_room_id: id });
+      if (!res.ok) return;
+      forgetRoom(id);
+      const msg = `'${name}' 모임을 삭제했어요. 24시간 안에는 링크로 들어가 복구할 수 있어요`;
+      if (id === roomId) leaveCurrent(msg);
+      else toast(msg);
+    }
+
+    // 삭제된 모임 화면: 24시간 이내면 [복구], 지났으면 [새 모임 만들기]
+    function showDeleted(data) {
+      closeSheet();
+      const until = data.restore_until ? new Date(data.restore_until) : null;
+      const canRestore = until && until > new Date();
+      if (!canRestore) forgetRoom(roomId);
+      showStatus('삭제된 모임이에요',
+        canRestore
+          ? { label: '복구', onClick: restoreRoom }
+          : { label: '새 모임 만들기', onClick: createAndGo },
+        canRestore ? `'${data.name}' · 24시간 안에는 복구할 수 있어요` : `'${data.name}'`);
+    }
+
+    async function restoreRoom() {
+      const res = await runRpc('restore_room', { p_room_id: roomId });
+      if (!res.ok) return;
+      toast('모임을 복구했어요');
+      refetch();
+    }
+
+    async function undoReset() {
+      const res = await write('undo_reset', {});
+      if (res.ok) {
+        state.undoUntil = null;
+        toast('되돌렸어요');
+        render();
+      }
+    }
+
+    function renderUndoBar() {
+      $('undoBar').hidden = !(state.undoUntil && state.undoUntil > new Date());
+    }
+
+    // 링크 복사
+    async function copyLink() {
+      const url = location.href;
+      try {
+        // 권한 확인 등으로 응답이 늦어지면 1.5초 뒤 직접 복사 화면으로
+        await Promise.race([
+          navigator.clipboard.writeText(url),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500))
+        ]);
+        toast(`'${state.name}' 링크를 복사했어요! 단톡에 붙여넣으세요`);
+      } catch (e) {
+        // 클립보드를 쓸 수 없는 환경: 주소를 직접 복사하게 보여줌
+        openSheet(body => {
+          body.append(h('h3', 'sheet-title', `'${state.name}' 모임 링크`),
+                      h('p', 'sheet-desc', '아래 주소를 길게 눌러 복사한 뒤 단톡에 붙여넣으세요.'));
+          const input = h('input', 'copy-input');
+          input.readOnly = true;
+          input.value = url;
+          body.append(input);
+          input.addEventListener('focus', () => input.select());
+        });
+      }
     }
 
     // ===== 달력 =====
     function toggleMark(key) {
-      const list = state.marks[key] || [];
-      const i = list.indexOf(state.selectedId);
-      if (i >= 0) list.splice(i, 1);
-      else list.push(state.selectedId);
-      if (list.length) state.marks[key] = list;
-      else delete state.marks[key];
-      save();
-      render();   // 달력 + 추천 줄 함께 갱신
+      const me = state.selectedId;
+      write('toggle_unavailable', { p_member_id: me, p_day: key }, () => {
+        const list = state.marks[key] || [];
+        const i = list.indexOf(me);
+        if (i >= 0) list.splice(i, 1);
+        else list.push(me);
+        if (list.length) state.marks[key] = list;
+        else delete state.marks[key];
+      });
     }
 
     // 그날 안 되는 사람들 (입력 중인 사람이 맨 앞)
@@ -1354,14 +1922,136 @@
     }
 
     function render() {
+      if (!roomId) return;
+      renderTitle();
+      renderUndoBar();
       renderPeople();
       renderCalendar();
+    }
+
+    // ===== 로딩 / 오류 화면 =====
+    function showStatus(text, button, subText) {
+      $('main').hidden = true;
+      $('linkBtn').hidden = true;
+      $('gearBtn').hidden = true;
+      $('undoBar').hidden = true;
+      $('roomTitleRow').hidden = true;
+      const box = $('status');
+      box.hidden = false;
+      box.innerHTML = '';
+      box.append(h('div', '', text));
+      if (subText) box.append(h('div', 'sub', subText));
+      if (button) {
+        const btn = h('button', 'btn primary full', button.label);
+        btn.addEventListener('click', button.onClick);
+        box.append(btn);
+      }
+    }
+
+    function showNotFound() {
+      roomId = null;
+      showStatus('모임을 찾을 수 없어요. 링크가 맞는지 확인해주세요.',
+        { label: '새 모임 만들기', onClick: createAndGo });
+    }
+
+    function showMain() {
+      $('status').hidden = true;
+      $('main').hidden = false;
+      $('linkBtn').hidden = false;
+      $('gearBtn').hidden = false;
+      $('roomTitleRow').hidden = false;
+    }
+
+    function renderTitle() {
+      $('roomTitleText').textContent = state.name;
+      document.title = `${state.name} · 모일날`;
+    }
+
+    // ===== 실시간: 모임 ID 이름의 broadcast 채널 =====
+    // 서버가 저장할 때마다 'changed' 신호를 보냄 → 받으면 get_room 으로 다시 불러오기
+    function subscribe() {
+      let first = true;
+      db.channel(roomId)
+        .on('broadcast', { event: 'changed' }, () => scheduleRefetch())
+        .subscribe(status => {
+          if (status === 'SUBSCRIBED') {
+            if (!first) scheduleRefetch();   // 다시 연결되면 놓친 변경이 있을 수 있으니 한 번 불러오기
+            first = false;
+          }
+        });
+    }
+
+    // 다른 앱에 갔다가 돌아오면 최신 상태로
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && roomId) scheduleRefetch();
+    });
+
+    // ===== 시작 =====
+    async function init() {
+      if (!db) {
+        return showStatus(NETWORK_ERROR, { label: '다시 시도', onClick: () => location.reload() });
+      }
+
+      let id = new URLSearchParams(location.search).get('g');
+      const fromList = !id;
+      let data;
+
+      try {
+        if (!id) {
+          // 링크 없이 열면: 최근 모임 → 없으면 새 모임
+          id = local.rooms.length ? local.rooms[0].id : await callRpc('create_room', {});
+          const url = location.pathname + '?g=' + encodeURIComponent(id);
+          try { history.replaceState(null, '', url); }
+          catch (e) { location.replace(url); return; }
+        }
+
+        roomId = id;
+        data = await callRpc('get_room', { p_room_id: id });
+      } catch (err) {
+        if (err && err.message === 'room_not_found') {
+          forgetRoom(id);
+          if (fromList) {   // 내 목록의 모임이 사라졌으면(90일 미접속 삭제 등) 다시 시작
+            const url = location.pathname;
+            try { history.replaceState(null, '', url); } catch (e) {}
+            return init();
+          }
+          return showNotFound();
+        }
+        roomId = null;
+        return showStatus(NETWORK_ERROR, { label: '다시 시도', onClick: () => location.reload() });
+      }
+
+      if (data.deleted) {
+        if (fromList) {   // 내 목록의 최근 모임이 삭제됐으면 목록에서 빼고 다음 모임으로
+          forgetRoom(id);
+          try { history.replaceState(null, '', location.pathname); } catch (e) {}
+          return init();
+        }
+        subscribe();      // 친구가 복구하면 바로 다시 보이도록 알림은 계속 받음
+        return showDeleted(data);
+      }
+
+      applyRoom(data);
+      rememberRoom(true);
+      showMain();
+      render();
+      subscribe();
+
+      // 다른 모임에서 넘어올 때 남긴 안내가 있으면 그걸, 없으면 재접속 인사
+      let flash = null;
+      try { flash = sessionStorage.getItem(FLASH_KEY); sessionStorage.removeItem(FLASH_KEY); } catch (e) {}
+      const me = findPerson(local.me[roomId]);
+      if (flash) toast(flash);
+      else if (me) toast(`${me.emoji} ${me.name} 님 반가워요 👋`);
     }
 
     // ===== 이벤트 연결 =====
     $('minusBtn').addEventListener('click', () => changeSize(-1));
     $('plusBtn').addEventListener('click', () => changeSize(1));
     $('gearBtn').addEventListener('click', openSettings);
+    $('linkBtn').addEventListener('click', copyLink);
+    $('roomTitle').addEventListener('click', () => openRename(roomId, state.name));
+    $('undoBtn').addEventListener('click', undoReset);
 
     $('prev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
@@ -1372,7 +2062,7 @@
       renderCalendar();
     });
 
-    render();
+    init();
   </script>
 </body>
 </html>

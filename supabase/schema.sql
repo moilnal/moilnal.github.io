@@ -2,11 +2,16 @@
 -- 모일날 Supabase 스키마
 --
 -- 사용법: Supabase 대시보드 > SQL Editor 에 이 파일 전체를 붙여넣고 Run.
---         여러 번 실행해도 안전하게 작성됨 (if not exists / create or replace).
+--         여러 번 실행해도 안전하게 작성됨 (if not exists / create or replace,
+--         revoke·grant 는 반복 실행해도 에러가 나지 않음).
+--
+-- 전제: 프로젝트 설정 "Automatically expose new tables" 끔, "Enable automatic RLS" 켬.
+--       자동 설정에 기대지 않고, 필요한 권한은 이 파일에서 전부 명시적으로 주고 뺀다.
 --
 -- 보안 요약
---   * 모든 테이블 RLS 켬 + 정책(policy) 0개 → anon 키로 테이블 직접 접근 불가
---   * 읽기/쓰기는 security definer RPC 함수로만 가능
+--   * 모든 테이블 RLS 켬 + 정책(policy) 0개 + 테이블 권한 전부 회수
+--     → anon/authenticated 키로 테이블 직접 접근 불가
+--   * 읽기/쓰기는 security definer RPC 함수로만 가능 (anon 에게만 실행 허용)
 --   * 모든 함수는 room_id 하나를 받아 그 모임 데이터만 다룸
 --   * 모임 목록을 돌려주는 함수는 없음
 --
@@ -87,8 +92,10 @@ alter table public.members            enable row level security;
 alter table public.unavailable        enable row level security;
 alter table public.room_reset_backups enable row level security;
 
+-- 테이블 권한을 public(모든 역할), anon, authenticated 에서 전부 회수
+-- (select/insert/update/delete/truncate/references/trigger 포함)
 revoke all on table public.rooms, public.members, public.unavailable, public.room_reset_backups
-  from anon, authenticated;
+  from public, anon, authenticated;
 
 
 -- =====================================================================
@@ -617,10 +624,15 @@ $$;
 
 -- =====================================================================
 -- 6. 함수 실행 권한
---    Supabase는 public 스키마의 새 함수에 기본으로 실행 권한을 주므로,
---    먼저 전부 회수한 뒤 앱이 써야 하는 함수만 다시 허용한다.
+--    PostgreSQL은 새 함수에 기본으로 public(모든 역할) 실행 권한을 주므로,
+--    먼저 전부 회수한 뒤 앱이 써야 하는 함수만 anon 에게 다시 허용한다.
+--    (앱은 로그인이 없어서 항상 anon 역할로 호출함 → authenticated 에는 주지 않음)
 -- =====================================================================
 
+-- anon 이 public 스키마의 RPC 를 부를 수 있도록 스키마 사용 권한 (이미 있어도 에러 없음)
+grant usage on schema public to anon;
+
+-- 내부 도우미 함수: 아무에게도 실행 권한 없음
 revoke execute on all functions in schema moilnal_private from public, anon, authenticated;
 
 revoke execute on function public.create_room()                              from public, anon, authenticated;
@@ -635,14 +647,17 @@ revoke execute on function public.reset_room(text)                           fro
 revoke execute on function public.undo_reset(text)                           from public, anon, authenticated;
 revoke execute on function public.cleanup_inactive_rooms()                   from public, anon, authenticated;
 
-grant execute on function public.create_room()                               to anon, authenticated;
-grant execute on function public.get_room(text)                              to anon, authenticated;
-grant execute on function public.save_member(text, uuid, text, text)         to anon, authenticated;
-grant execute on function public.delete_member(text, uuid)                   to anon, authenticated;
-grant execute on function public.set_room_size(text, int)                    to anon, authenticated;
-grant execute on function public.toggle_unavailable(text, uuid, text)        to anon, authenticated;
-grant execute on function public.set_responded(text, uuid, boolean)          to anon, authenticated;
-grant execute on function public.set_confirmed_date(text, text)              to anon, authenticated;
-grant execute on function public.reset_room(text)                            to anon, authenticated;
-grant execute on function public.undo_reset(text)                            to anon, authenticated;
--- cleanup_inactive_rooms 는 일부러 허용하지 않음 (예약 작업만 실행)
+-- 앱에서 쓰는 RPC 10개만 anon 에게 실행 허용
+grant execute on function public.create_room()                               to anon;
+grant execute on function public.get_room(text)                              to anon;
+grant execute on function public.save_member(text, uuid, text, text)         to anon;
+grant execute on function public.delete_member(text, uuid)                   to anon;
+grant execute on function public.set_room_size(text, int)                    to anon;
+grant execute on function public.toggle_unavailable(text, uuid, text)        to anon;
+grant execute on function public.set_responded(text, uuid, boolean)          to anon;
+grant execute on function public.set_confirmed_date(text, text)              to anon;
+grant execute on function public.reset_room(text)                            to anon;
+grant execute on function public.undo_reset(text)                            to anon;
+
+-- cleanup_inactive_rooms 는 위에서 public/anon/authenticated 모두 회수했고,
+-- 여기서 다시 허용하지 않는다 (예약 작업만 실행, 함수 주인 postgres 권한으로 동작)
