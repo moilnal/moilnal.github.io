@@ -14,6 +14,7 @@
       --line: #ece8f3;
       --accent: #a78bdb;      /* 파스텔 보라: 오늘, 선택 강조 */
       --accent-soft: #efe9fa;
+      --accent-deep: #7c5cc4; /* 진한 보라: 확정된 날 */
       --ok: #5bbf8a;          /* 초록: 모두 가능한 날, 응답 완료 */
       --no-rgb: 224, 90, 106; /* 빨강: 안 되는 날 (배경 진하기에 사용) */
       --sat: #4a7bd8;
@@ -323,7 +324,19 @@
     .cell.allok .num { box-shadow: 0 0 0 2px var(--ok); }
 
     /* 오늘: 보라색으로 채운 숫자 */
-    .cell.today .num { background: var(--accent); color: #fff; font-weight: 700; }
+    .cell.today .num { background: var(--accent-soft); color: var(--accent-deep); font-weight: 800; }
+
+    /* 확정된 날: 진한 보라색으로 꽉 찬 동그라미 + 📌, 다른 표시보다 눈에 띄게 */
+    .cell.confirmed { position: relative; box-shadow: inset 0 0 0 2px var(--accent-deep); }
+    .cell.confirmed .num {
+      width: 26px;
+      height: 26px;
+      background: var(--accent-deep);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(124, 92, 196, 0.45);
+    }
+    .cell .pin { position: absolute; top: 1px; right: 2px; font-size: 10px; line-height: 1; }
 
     /* 이모지 최대 2개 + "+n", 한 줄로 겹치지 않게 */
     .faces {
@@ -387,7 +400,8 @@
       color: var(--muted);
     }
     .legend span { display: flex; align-items: center; gap: 5px; }
-    .lg-today { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+    .lg-today { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-soft); box-shadow: inset 0 0 0 1px #d6c9ef; }
+    .lg-confirm { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-deep); }
     .lg-ok { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ok); }
 
     .legend-tip {
@@ -551,6 +565,49 @@
     }
     .btn.ghost { background: #f1eef6; }
     .btn.danger { background: var(--sun); color: #fff; }
+    .btn.primary { background: var(--accent-deep); color: #fff; }
+    .sheet-actions { margin-top: 18px; }
+
+    /* 확정 배너 (추천 줄 자리) */
+    .banner {
+      margin-top: 12px;
+      padding: 10px 10px 10px 12px;
+      border-radius: 14px;
+      background: var(--accent-deep);
+      color: #fff;
+    }
+    .banner[hidden] { display: none; }
+    .banner-main { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+    .banner-title { flex: 1; min-width: 0; }
+    .dday {
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.22);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .banner-btn {
+      height: 28px;
+      padding: 0 10px;
+      border: none;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--accent-deep) !important;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .banner-warn {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 9px;
+      background: #fff4d6;
+      color: #8a5a00;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .banner.past { background: #f1eef6; color: var(--muted); }
+    .banner.past .banner-main { font-size: 14px; }
     .btn.full { width: 100%; flex: none; }
 
     /* ---------- 안내 토스트 ---------- */
@@ -596,6 +653,7 @@
       </div>
       <div id="chips" class="chips"></div>
       <div id="hint" class="hint"></div>
+      <div id="banner" class="banner" hidden></div>
       <div id="rec" class="rec" hidden>
         <div class="rec-label">✨ 추천<small id="recPending">(응답 중)</small></div>
         <div id="recChips" class="rec-chips"></div>
@@ -619,6 +677,7 @@
       <div class="legend">
         <span><i class="lg-today"></i>오늘</span>
         <span><i class="lg-ok"></i>모두 가능</span>
+        <span><i class="lg-confirm"></i>확정</span>
       </div>
       <p class="legend-tip">
         날짜를 누르면 안 되는 사람을 볼 수 있어요<br>
@@ -655,7 +714,7 @@
     // marks: { '2026-11-12': [참여자 id, ...] }  ← 그날 안 되는 사람들
     // selectedId: 지금 입력 중인 사람 (null이면 보기 모드, 저장하지 않음)
     function freshState() {
-      return { size: DEFAULT_SIZE, participants: [], marks: {}, selectedId: null };
+      return { size: DEFAULT_SIZE, participants: [], marks: {}, confirmed: null, selectedId: null };
     }
 
     function load() {
@@ -665,6 +724,7 @@
         if (saved && Array.isArray(saved.participants)) {
           s.participants = saved.participants.map(p => ({ ...p, done: !!p.done }));
           s.marks = saved.marks || {};
+          if (saved.confirmed && saved.confirmed.key) s.confirmed = saved.confirmed;
           // 예전 데이터에는 인원수가 없으므로 현재 참여자 수로 시작
           s.size = Number.isInteger(saved.size) ? saved.size : (s.participants.length || DEFAULT_SIZE);
         }
@@ -678,13 +738,15 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           size: state.size,
           participants: state.participants,
-          marks: state.marks
+          marks: state.marks,
+          confirmed: state.confirmed
         }));
       } catch (e) {}
     }
 
     let state = load();
     let newEmoji = null;   // 빈자리를 채울 때 자동으로 들어갈 이모지
+    let changing = false;  // 확정 배너의 [변경]을 누른 상태 (저장하지 않음)
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -776,12 +838,13 @@
     });
 
     // 확인 팝업 (취소 / 실행)
-    function confirmSheet(title, desc, okLabel, onOk) {
+    // kind: 'danger'(빨강, 삭제류) 또는 'primary'(보라, 확정류)
+    function confirmSheet(title, desc, okLabel, onOk, kind = 'danger') {
       openSheet(body => {
         body.append(h('h3', 'sheet-title', title), h('p', 'sheet-desc', desc));
         const row = h('div', 'btn-row');
         const cancelBtn = h('button', 'btn ghost', '취소');
-        const okBtn = h('button', 'btn danger', okLabel);
+        const okBtn = h('button', 'btn ' + kind, okLabel);
         cancelBtn.addEventListener('click', closeSheet);
         okBtn.addEventListener('click', () => { onOk(); closeSheet(); render(); });
         row.append(cancelBtn, okBtn);
@@ -992,20 +1055,112 @@
           toast('응답 완료! 이름을 다시 누르면 고칠 수 있어요');
         });
         hint.append(text, done);
+      } else if (changing && activeConfirmed()) {
+        hint.textContent = '다른 날짜를 탭해서 다시 확정하세요';
       } else if (emptySlots() > 0) {
         hint.textContent = '빈자리를 눌러 내 이름을 넣어보세요';
       }
 
+      renderBanner();
       renderRecommend();
+    }
+
+    // ===== 날짜 확정 =====
+    // state.confirmed = { key: '2026-11-07', known: [확정할 때 이미 안 된다고 했던 사람 id] }
+    function todayKey() {
+      return dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    }
+
+    function keyToDate(key) {
+      const [y, m, d] = key.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function shortLabel(date) {
+      return `${date.getMonth() + 1}/${date.getDate()} (${DOW[date.getDay()]})`;
+    }
+
+    // 아직 지나지 않은 확정 날짜 (지났으면 null)
+    function activeConfirmed() {
+      const c = state.confirmed;
+      return c && c.key >= todayKey() ? c : null;
+    }
+
+    function renderBanner() {
+      const banner = $('banner');
+      banner.innerHTML = '';
+      const c = state.confirmed;
+      banner.hidden = !c;
+      if (!c) return;
+
+      const date = keyToDate(c.key);
+
+      // 확정 날짜가 지났으면 "지난 모임"
+      if (c.key < todayKey()) {
+        banner.className = 'banner past';
+        banner.append(h('div', 'banner-main', `지난 모임: ${shortLabel(date)}`));
+        return;
+      }
+
+      banner.className = 'banner';
+      const main = h('div', 'banner-main');
+      const diff = Math.round((date - today) / 86400000);
+      main.append(
+        h('span', 'banner-title', `📌 ${shortLabel(date)} 모일날!`),
+        h('span', 'dday', diff === 0 ? 'D-DAY' : `D-${diff}`)
+      );
+      const changeBtn = h('button', 'banner-btn', changing ? '닫기' : '변경');
+      changeBtn.addEventListener('click', () => { changing = !changing; render(); });
+      main.append(changeBtn);
+      banner.append(main);
+
+      // 확정한 뒤에 새로 "안 된다"고 한 사람이 있으면 경고
+      const known = c.known || [];
+      const newcomers = unavailablePeople(c.key).filter(p => !known.includes(p.id));
+      if (newcomers.length) {
+        banner.append(h('div', 'banner-warn',
+          `⚠️ ${newcomers.map(p => p.name).join(', ')} 님이 이 날 안 된대요`));
+      }
+    }
+
+    function confirmDate(date, key) {
+      const people = unavailablePeople(key);
+      const label = shortLabel(date);
+      const prev = activeConfirmed();
+      let title, desc;
+      if (people.length) {
+        title = `${people.length}명이 안 되는 날이에요. 그래도 확정할까요?`;
+        desc = `${label} · 안 되는 사람: ${people.map(p => `${p.emoji} ${p.name}`).join(', ')}`;
+      } else {
+        title = `${label}로 확정할까요?`;
+        desc = '모두 가능한 날이에요 🎉';
+      }
+      if (prev && prev.key !== key) desc += ` · 기존 확정(${shortLabel(keyToDate(prev.key))})은 취소돼요`;
+
+      confirmSheet(title, desc, '확정하기', () => {
+        state.confirmed = { key, known: people.map(p => p.id) };   // 확정은 한 번에 하나만
+        changing = false;
+        save();
+        toast(`📌 ${label}로 확정했어요`);
+      }, 'primary');
+    }
+
+    function cancelConfirm(date) {
+      confirmSheet('확정을 취소할까요?', `${shortLabel(date)} 확정이 취소돼요.`, '확정 취소', () => {
+        state.confirmed = null;
+        changing = false;
+        save();
+        toast('확정을 취소했어요');
+      });
     }
 
     // ===== 추천 날짜 =====
     const RECOMMEND_DAYS = 60;
 
-    // 오늘부터 60일 안에서: 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
+    // 내일부터 60일 안에서: 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
     function recommendDates() {
       const list = [];
-      for (let i = 0; i < RECOMMEND_DAYS; i++) {
+      for (let i = 1; i <= RECOMMEND_DAYS; i++) {
         const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
         const key = dateKey(date.getFullYear(), date.getMonth(), date.getDate());
         const dow = date.getDay();
@@ -1024,8 +1179,10 @@
     function renderRecommend() {
       const rec = $('rec');
       const anyAnswered = state.participants.some(p => p.done);
-      rec.hidden = !anyAnswered;          // 아직 아무도 응답 안 했으면 숨김
-      if (!anyAnswered) return;
+      // 아직 아무도 응답 안 했거나, 확정된 날이 있으면(변경 중이 아닐 때) 숨김
+      const show = anyAnswered && (!activeConfirmed() || changing);
+      rec.hidden = !show;
+      if (!show) return;
 
       const allAnswered = emptySlots() === 0 && state.participants.every(p => p.done);
       $('recPending').hidden = allAnswered;
@@ -1066,6 +1223,7 @@
               try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
               state = freshState();
               newEmoji = null;
+              changing = false;
               toast('새로 시작했어요');
             });
         });
@@ -1112,6 +1270,21 @@
           }
           body.append(ul);
         }
+
+        // 보기 모드에서만 확정/확정 취소 버튼 (지난 날짜·오늘은 확정 불가)
+        if (state.selectedId) return;
+        const active = activeConfirmed();
+        const actions = h('div', 'sheet-actions');
+        if (active && active.key === key) {
+          const btn = h('button', 'btn ghost full', '확정 취소');
+          btn.addEventListener('click', () => cancelConfirm(date));
+          actions.append(btn);
+        } else if (date > today && (!active || changing)) {
+          const btn = h('button', 'btn primary full', '📌 이 날로 확정하기');
+          btn.addEventListener('click', () => confirmDate(date, key));
+          actions.append(btn);
+        }
+        if (actions.children.length) body.append(actions);
       });
     }
 
@@ -1142,6 +1315,11 @@
         if (date.getTime() === today.getTime()) cell.classList.add('today');
 
         cell.append(h('span', 'num', d));
+
+        if (state.confirmed && state.confirmed.key === key) {
+          cell.classList.add('confirmed');
+          cell.append(h('span', 'pin', '📌'));
+        }
 
         const people = unavailablePeople(key);
         if (people.length > 0) {
