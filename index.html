@@ -149,6 +149,61 @@
     .chip .nm { padding-left: 7px; line-height: 34px; }
     .chip .check { margin-left: 4px; color: var(--ok); font-weight: 800; }
 
+    /* 추천 줄: "✨ 추천" + 날짜 칩 3개 */
+    .rec {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .rec[hidden] { display: none; }
+    .rec-label {
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+    .rec-label small { font-size: 10px; font-weight: 600; color: var(--muted); }
+    .rec-chips {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .rec-chip {
+      height: 34px;
+      padding: 0 4px;
+      border: 1.5px solid;
+      border-radius: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .rec-chip.ok { background: #eaf8f0; border-color: #bfe6cf; color: #2f8a5b; }
+    .rec-chip.some { background: #fdeef0; border-color: #f5c9cf; color: #a33d4b; }
+    .rec-chip .n {
+      min-width: 15px;
+      height: 15px;
+      padding: 0 4px;
+      border-radius: 8px;
+      background: var(--sun);
+      color: #fff;
+      font-size: 10px;
+      line-height: 15px;
+      text-align: center;
+    }
+
     .hint {
       margin-top: 10px;
       font-size: 13px;
@@ -255,6 +310,14 @@
     .weekdays .sat, .cell.sat .num { color: var(--sat); }
 
     .cell.past { opacity: 0.35; cursor: default; }
+
+    /* 추천 칩을 눌렀을 때 해당 날짜 칸이 잠깐 반짝임 */
+    @keyframes flash {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 219, 0); transform: scale(1); }
+      25%, 75% { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.08); }
+      50% { box-shadow: 0 0 0 3px rgba(167, 139, 219, 0.3); transform: scale(1); }
+    }
+    .cell.flash { animation: flash 0.9s ease; position: relative; z-index: 1; }
 
     /* 모두 가능한 날: 초록 동그라미 테두리 */
     .cell.allok .num { box-shadow: 0 0 0 2px var(--ok); }
@@ -533,6 +596,10 @@
       </div>
       <div id="chips" class="chips"></div>
       <div id="hint" class="hint"></div>
+      <div id="rec" class="rec" hidden>
+        <div class="rec-label">✨ 추천<small id="recPending">(응답 중)</small></div>
+        <div id="recChips" class="rec-chips"></div>
+      </div>
     </section>
 
     <section class="card calendar">
@@ -927,9 +994,65 @@
         hint.append(text, done);
       } else if (emptySlots() > 0) {
         hint.textContent = '빈자리를 눌러 내 이름을 넣어보세요';
-      } else {
-        hint.textContent = '이름을 누르면 입력, 이모지를 누르면 캐릭터 변경';
       }
+
+      renderRecommend();
+    }
+
+    // ===== 추천 날짜 =====
+    const RECOMMEND_DAYS = 60;
+
+    // 오늘부터 60일 안에서: 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
+    function recommendDates() {
+      const list = [];
+      for (let i = 0; i < RECOMMEND_DAYS; i++) {
+        const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+        const key = dateKey(date.getFullYear(), date.getMonth(), date.getDate());
+        const dow = date.getDay();
+        list.push({
+          date,
+          key,
+          count: unavailablePeople(key).length,
+          weekend: dow === 5 || dow === 6 || dow === 0 ? 0 : 1,
+          order: i
+        });
+      }
+      list.sort((a, b) => a.count - b.count || a.weekend - b.weekend || a.order - b.order);
+      return list.slice(0, 3);
+    }
+
+    function renderRecommend() {
+      const rec = $('rec');
+      const anyAnswered = state.participants.some(p => p.done);
+      rec.hidden = !anyAnswered;          // 아직 아무도 응답 안 했으면 숨김
+      if (!anyAnswered) return;
+
+      const allAnswered = emptySlots() === 0 && state.participants.every(p => p.done);
+      $('recPending').hidden = allAnswered;
+
+      const box = $('recChips');
+      box.innerHTML = '';
+      for (const r of recommendDates()) {
+        const d = r.date;
+        const chip = h('button', 'rec-chip ' + (r.count === 0 ? 'ok' : 'some'),
+          `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`);
+        if (r.count > 0) chip.append(h('span', 'n', r.count));
+        chip.addEventListener('click', () => goToDate(d, r.key));
+        box.append(chip);
+      }
+    }
+
+    // 달력을 그 달로 옮기고, 날짜 칸을 반짝인 뒤 상세 시트 열기
+    function goToDate(date, key) {
+      current = new Date(date.getFullYear(), date.getMonth(), 1);
+      renderCalendar();
+      const cell = document.querySelector(`.cell[data-key="${key}"]`);
+      if (cell) {
+        cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cell.classList.add('flash');
+        cell.addEventListener('animationend', () => cell.classList.remove('flash'), { once: true });
+      }
+      setTimeout(() => showDayDetail(date, key), 700);
     }
 
     // ===== 설정 =====
@@ -959,7 +1082,7 @@
       if (list.length) state.marks[key] = list;
       else delete state.marks[key];
       save();
-      renderCalendar();
+      render();   // 달력 + 추천 줄 함께 갱신
     }
 
     // 그날 안 되는 사람들 (입력 중인 사람이 맨 앞)
@@ -1009,6 +1132,7 @@
         const date = new Date(year, month, d);
         const key = dateKey(year, month, d);
         const cell = h('div', 'cell');
+        cell.dataset.key = key;
         const dow = date.getDay();
         const isPast = date < today;
 
