@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>모일날</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --bg: #f7f4fb;          /* 연한 라벤더 배경 */
+      --card: #ffffff;
+      --text: #3d3a4a;
+      --muted: #9a96a8;
+      --accent: #a78bdb;      /* 파스텔 보라 (오늘 표시) */
+      --accent-soft: #efe9fa;
+      --sat: #4a7bd8;
+      --sun: #e05a6a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .app {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+
+    .calendar {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 16px 12px 20px;
+      box-shadow: 0 4px 20px rgba(120, 100, 160, 0.08);
+    }
+
+    /* < 2026년 11월 > */
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .month-nav button {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 22px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .month-nav button:active { background: #e2d8f5; }
+
+    #title {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    /* 요일 줄 + 날짜 칸: 7칸짜리 격자 */
+    .weekdays, #grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .weekdays div {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 8px 0;
+    }
+
+    .cell {
+      aspect-ratio: 1;          /* 정사각형 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .cell span {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .weekdays .sun, .cell.sun { color: var(--sun); }
+    .weekdays .sat, .cell.sat { color: var(--sat); }
+
+    .cell.past { opacity: 0.35; }
+
+    .cell.today span {
+      border: 2px solid var(--accent);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>모일날</h1>
+
+    <div class="calendar">
+      <div class="month-nav">
+        <button id="prev" aria-label="이전 달">‹</button>
+        <div id="title"></div>
+        <button id="next" aria-label="다음 달">›</button>
+      </div>
+
+      <div class="weekdays">
+        <div class="sun">일</div><div>월</div><div>화</div><div>수</div>
+        <div>목</div><div>금</div><div class="sat">토</div>
+      </div>
+
+      <div id="grid"></div>
+    </div>
+  </div>
+
+  <script>
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 지금 보고 있는 달 (항상 1일로 둠)
+    let current = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    function render() {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+
+      document.getElementById('title').textContent = `${year}년 ${month + 1}월`;
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();       // 1일의 요일 (0=일)
+      const lastDate = new Date(year, month + 1, 0).getDate();  // 이번 달 마지막 날짜
+
+      // 1일 앞의 빈 칸
+      for (let i = 0; i < firstDay; i++) {
+        grid.appendChild(document.createElement('div'));
+      }
+
+      for (let d = 1; d <= lastDate; d++) {
+        const date = new Date(year, month, d);
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        const dow = date.getDay();
+        if (dow === 0) cell.classList.add('sun');
+        if (dow === 6) cell.classList.add('sat');
+        if (date < today) cell.classList.add('past');
+        if (date.getTime() === today.getTime()) cell.classList.add('today');
+
+        const num = document.createElement('span');
+        num.textContent = d;
+        cell.appendChild(num);
+        grid.appendChild(cell);
+      }
+    }
+
+    document.getElementById('prev').addEventListener('click', () => {
+      current.setMonth(current.getMonth() - 1);
+      render();
+    });
+
+    document.getElementById('next').addEventListener('click', () => {
+      current.setMonth(current.getMonth() + 1);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
