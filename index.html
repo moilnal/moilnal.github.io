@@ -1068,7 +1068,8 @@
     }
 
     // 화면을 먼저 바꾸고(optimistic) 서버에 저장. 실패하면 화면을 되돌림
-    async function write(name, args, optimistic) {
+    // quiet: 화면에서 따로 안내할 오류 코드 목록 (이 오류는 기본 안내 문구를 띄우지 않음)
+    async function write(name, args, optimistic, quiet = []) {
       writeSeq++;
       const backup = JSON.stringify({
         name: state.name, size: state.size, participants: state.participants,
@@ -1088,7 +1089,7 @@
           Object.assign(state, b, { undoUntil: b.undoUntil ? new Date(b.undoUntil) : null });
           render();
         }
-        toast(errorMessage(err));
+        if (!(err && quiet.includes(err.message))) toast(errorMessage(err));
         return { ok: false, error: err };
       } finally {
         pending--;
@@ -1328,7 +1329,8 @@
           const size = Math.min(MAX_PEOPLE, Math.max(state.size, state.participants.length) + 1);
           const grow = await write('set_room_size', { p_size: size }, () => { state.size = size; });
           if (!grow.ok) return;
-          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
+          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji },
+            null, ['room_full']);   // 자리가 다 찼다는 안내는 팝업으로만
           if (res.ok) return joinedAs(res.data, name, emoji);
           if (res.error && res.error.message === 'room_full') slotTaken(name, emoji);   // 또 누가 먼저 들어옴
         }, 'primary');
@@ -1380,7 +1382,8 @@
 
           saving = true;
           saveBtn.disabled = true;
-          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
+          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji },
+            null, ['room_full']);   // 자리가 다 찼다는 안내는 팝업으로만
           saving = false;
           saveBtn.disabled = false;
           if (!res.ok) {
