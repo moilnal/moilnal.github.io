@@ -861,7 +861,7 @@
         <div id="hint" class="hint"></div>
         <div id="banner" class="banner" hidden></div>
         <div id="rec" class="rec" hidden>
-          <div class="rec-label">✨ 추천<small id="recPending">(응답 중)</small></div>
+          <div class="rec-label"><span id="recTitle">✨ 추천</span><small id="recPending">(응답 중)</small></div>
           <div id="recChips" class="rec-chips"></div>
         </div>
       </section>
@@ -974,6 +974,8 @@
     };
     let newEmoji = null;   // 빈자리를 채울 때 자동으로 들어갈 이모지
     let changing = false;  // 확정 배너의 [변경]을 누른 상태
+    let draft = false;     // ?new 로 연 임시 모임 (첫 입력 때 서버에 만들어짐)
+    let creating = null;   // create_room 진행 중인 Promise (두 번 만들지 않게)
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1077,6 +1079,7 @@
       pending++;
       setBusy();
       try {
+        await ensureRoom();   // ?new 임시 모임이면 첫 입력 때 서버에 모임을 만듦
         const data = await callRpc(name, { p_room_id: roomId, ...args });
         return { ok: true, data };
       } catch (err) {
@@ -1092,6 +1095,21 @@
         setBusy();
         scheduleRefetch();   // 저장이 끝나면 서버 최신 상태로 맞춤
       }
+    }
+
+    // ?new 임시 모임을 서버에 만들고 주소를 ?g=모임ID 로 바꿈
+    function ensureRoom() {
+      if (!draft) return Promise.resolve();
+      if (!creating) {
+        creating = callRpc('create_room', {}).then(id => {
+          roomId = id;
+          draft = false;
+          try { history.replaceState(null, '', location.pathname + '?g=' + encodeURIComponent(id)); } catch (e) {}
+          rememberRoom(true);
+          subscribe();
+        }).finally(() => { creating = null; });
+      }
+      return creating;
     }
 
     function scheduleRefetch() {
@@ -1563,21 +1581,23 @@
     }
 
     // ===== 추천 날짜 =====
-    const RECOMMEND_DAYS = 60;
-
-    // 내일부터 60일 안에서: 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
+    // 지금 보고 있는 달에서(오늘·지난 날 제외): 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
     function recommendDates() {
       const list = [];
-      for (let i = 1; i <= RECOMMEND_DAYS; i++) {
-        const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
-        const key = dateKey(date.getFullYear(), date.getMonth(), date.getDate());
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      for (let d = 1; d <= lastDate; d++) {
+        const date = new Date(year, month, d);
+        if (date <= today) continue;
+        const key = dateKey(year, month, d);
         const dow = date.getDay();
         list.push({
           date,
           key,
           count: unavailablePeople(key).length,
           weekend: dow === 5 || dow === 6 || dow === 0 ? 0 : 1,
-          order: i
+          order: d
         });
       }
       list.sort((a, b) => a.count - b.count || a.weekend - b.weekend || a.order - b.order);
@@ -1588,16 +1608,20 @@
       const rec = $('rec');
       const anyAnswered = state.participants.some(p => p.done);
       // 아직 아무도 응답 안 했거나, 확정된 날이 있으면(변경 중이 아닐 때) 숨김
-      const show = anyAnswered && (!activeConfirmed() || changing);
+      const recs = recommendDates();
+      // 보고 있는 달에 추천할 날(오늘 이후)이 없어도 숨김
+      const show = anyAnswered && (!activeConfirmed() || changing) && recs.length > 0;
       rec.hidden = !show;
       if (!show) return;
+
+      $('recTitle').textContent = `✨ ${current.getMonth() + 1}월 추천`;
 
       const allAnswered = emptySlots() === 0 && state.participants.every(p => p.done);
       $('recPending').hidden = allAnswered;
 
       const box = $('recChips');
       box.innerHTML = '';
-      for (const r of recommendDates()) {
+      for (const r of recs) {
         const d = r.date;
         const chip = h('button', 'rec-chip ' + (r.count === 0 ? 'ok' : 'some'),
           `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`);
@@ -1607,10 +1631,38 @@
       }
     }
 
+    // 모임을 열 때 보여줄 달: 확정 날짜의 달 → 오늘 이후 '안 되는 날' 표시가 가장 많은 달 → 이번 달
+    function pickStartMonth() {
+      const c = activeConfirmed();
+      if (c) {
+        const d = keyToDate(c.key);
+        current = new Date(d.getFullYear(), d.getMonth(), 1);
+        return;
+      }
+      const counts = {};   // { '2026-12': 표시 수 }
+      const tk = todayKey();
+      for (const [key, ids] of Object.entries(state.marks)) {
+        if (key < tk || !ids.length) continue;
+        const ym = key.slice(0, 7);
+        counts[ym] = (counts[ym] || 0) + ids.length;
+      }
+      let best = null;
+      for (const ym of Object.keys(counts).sort()) {   // 같은 수면 더 가까운 달
+        if (!best || counts[ym] > counts[best]) best = ym;
+      }
+      if (best) {
+        const [y, m] = best.split('-').map(Number);
+        current = new Date(y, m - 1, 1);
+      } else {
+        current = new Date(today.getFullYear(), today.getMonth(), 1);
+      }
+    }
+
     // 달력을 그 달로 옮기고, 날짜 칸을 반짝인 뒤 상세 시트 열기
     function goToDate(date, key) {
       current = new Date(date.getFullYear(), date.getMonth(), 1);
       renderCalendar();
+      renderRecommend();
       const cell = document.querySelector(`.cell[data-key="${key}"]`);
       if (cell) {
         cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1650,7 +1702,8 @@
             });
         });
 
-        menu.append(newBtn, shareBtn, resetBtn);
+        menu.append(newBtn, shareBtn);
+        if (!draft) menu.append(resetBtn);   // 임시 모임은 지울 게 없음
         body.append(menu);
 
         // 내 모임 목록 (지금 모임 포함). 오른쪽 ⋯ 로 이름 바꾸기 / 목록에서 삭제 / 모임 삭제
@@ -1822,16 +1875,23 @@
     }
 
     // 👋 멤버 초대: 이 모임 링크가 담긴 초대 메시지
-    function inviteMembers() {
+    async function inviteMembers() {
+      if (draft) {   // 초대 링크에는 모임 ID가 필요하니 먼저 서버에 모임을 만듦
+        pending++;
+        setBusy();
+        try { await ensureRoom(); }
+        catch (e) { return toast(NETWORK_ERROR); }
+        finally { pending--; setBusy(); }
+      }
       const url = location.origin + location.pathname + '?g=' + encodeURIComponent(roomId);
       copyText(`[${state.name}] 모일날에서 안 되는 날 체크해줘! 📅\n${url}`,
         '초대 메시지를 복사했어요! 단톡에 붙여넣으세요',
         '초대 메시지');
     }
 
-    // 📤 다른 모임에 모일날 알려주기: 기본 주소 (받은 사람은 새 모임으로 시작)
+    // 📤 다른 모임에 모일날 알려주기: ?new 주소 (받은 사람은 항상 새 빈 모임으로 시작)
     function recommendApp() {
-      copyText(`약속 날짜 잡을 때 써봐! 안 되는 날만 체크하면 돼 📅\n${APP_URL}`,
+      copyText(`약속 날짜 잡을 때 써봐! 안 되는 날만 체크하면 돼 📅\n${APP_URL}?new`,
         '추천 메시지를 복사했어요! 받은 사람은 새 모임으로 시작해요',
         '모일날 추천 메시지');
     }
@@ -1960,7 +2020,7 @@
     }
 
     function render() {
-      if (!roomId) return;
+      if (!roomId && !draft) return;
       renderTitle();
       renderUndoBar();
       renderPeople();
@@ -2030,7 +2090,18 @@
         return showStatus(NETWORK_ERROR, { label: '다시 시도', onClick: () => location.reload() });
       }
 
-      let id = new URLSearchParams(location.search).get('g');
+      const params = new URLSearchParams(location.search);
+
+      // ?new: 최근 모임과 상관없이 새 빈 모임. 서버에는 첫 입력 때 만듦
+      if (params.has('new')) {
+        draft = true;
+        roomId = null;
+        showMain();
+        render();
+        return;
+      }
+
+      let id = params.get('g');
       const fromList = !id;
       let data;
 
@@ -2070,6 +2141,7 @@
       }
 
       applyRoom(data);
+      pickStartMonth();
       rememberRoom(true);
       showMain();
       render();
@@ -2094,10 +2166,12 @@
     $('prev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
       renderCalendar();
+      renderRecommend();
     });
     $('next').addEventListener('click', () => {
       current.setMonth(current.getMonth() + 1);
       renderCalendar();
+      renderRecommend();
     });
 
     init();
