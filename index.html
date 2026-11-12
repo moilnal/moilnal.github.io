@@ -1303,6 +1303,13 @@
       }
     }
 
+    // 빈자리를 저장하려는데 그사이 다른 사람이 들어온 경우: 안내 + 최신 상태로 새로고침
+    function slotTaken() {
+      closeSheet();
+      toast('방금 다른 분이 이 자리에 들어왔어요. 다른 빈자리를 골라주세요');
+      refetch();
+    }
+
     // 빈자리 칩을 누르면: 이모지 버튼 + 이름 입력 + 저장
     function openFillSlot() {
       ensureNewEmoji();
@@ -1344,7 +1351,7 @@
           const name = input.value.trim();
           if (!name) return toast('이름을 입력해주세요');
           if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
-          if (emptySlots() <= 0) return toast('빈자리가 없어요');
+          if (emptySlots() <= 0) return slotTaken();   // 팝업을 연 사이 실시간으로 자리가 찼음
 
           saving = true;
           saveBtn.disabled = true;
@@ -1352,7 +1359,11 @@
           const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
           saving = false;
           saveBtn.disabled = false;
-          if (!res.ok) return;
+          if (!res.ok) {
+            // 서버가 모임을 잠그고 인원을 세서, 그사이 다른 사람이 자리를 채웠으면 room_full 로 거절함 (덮어쓰지 않음)
+            if (res.error && res.error.message === 'room_full') slotTaken();
+            return;
+          }
 
           const id = res.data;
           if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
