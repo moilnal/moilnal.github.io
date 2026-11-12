@@ -12,15 +12,15 @@
   <meta property="og:locale" content="ko_KR">
   <meta property="og:title" content="모일날 · 우리 언제 모일까? 📅">
   <meta property="og:description" content="안 되는 날만 콕! 모두 되는 날을 찾아드려요">
-  <meta property="og:url" content="https://serilee0826.github.io/moilnal/">
-  <meta property="og:image" content="https://serilee0826.github.io/moilnal/og-image.png">
+  <meta property="og:url" content="https://moilnal.github.io/">
+  <meta property="og:image" content="https://moilnal.github.io/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="모일날 - 우리 언제 모일까?">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="모일날 · 우리 언제 모일까? 📅">
   <meta name="twitter:description" content="안 되는 날만 콕! 모두 되는 날을 찾아드려요">
-  <meta name="twitter:image" content="https://serilee0826.github.io/moilnal/og-image.png">
+  <meta name="twitter:image" content="https://moilnal.github.io/og-image.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
     :root {
@@ -1214,17 +1214,16 @@
       location.assign(location.pathname + '?g=' + encodeURIComponent(id));
     }
 
-    async function createAndGo() {
-      pending++;
-      setBusy();
-      try {
-        goRoom(await callRpc('create_room', {}));
-      } catch (err) {
-        toast(NETWORK_ERROR);
-      } finally {
-        pending--;
-        setBusy();
-      }
+    // 새 모임: ?new 빈 화면으로 이동 (서버 모임은 첫 입력 때 만들어짐)
+    function createAndGo() {
+      location.assign(location.pathname + '?new');
+    }
+
+    // 다른 모임에서 넘어올 때 남긴 안내 문구 꺼내기 (한 번만)
+    function takeFlash() {
+      let flash = null;
+      try { flash = sessionStorage.getItem(FLASH_KEY); sessionStorage.removeItem(FLASH_KEY); } catch (e) {}
+      return flash;
     }
 
     function whenLabel(ts) {
@@ -1849,7 +1848,7 @@
     }
 
     // ===== 공유 =====
-    const APP_URL = 'https://serilee0826.github.io/moilnal/';   // ?g= 없는 기본 주소
+    const APP_URL = 'https://moilnal.github.io/';   // 배포 주소 (파라미터 없음)
 
     // 글을 클립보드에 복사. 안 되면 직접 복사할 수 있게 팝업으로 보여줌
     async function copyText(text, successMsg, fallbackTitle) {
@@ -2098,6 +2097,8 @@
         roomId = null;
         showMain();
         render();
+        const flash = takeFlash();
+        if (flash) toast(flash);
         return;
       }
 
@@ -2148,8 +2149,7 @@
       subscribe();
 
       // 다른 모임에서 넘어올 때 남긴 안내가 있으면 그걸, 없으면 재접속 인사
-      let flash = null;
-      try { flash = sessionStorage.getItem(FLASH_KEY); sessionStorage.removeItem(FLASH_KEY); } catch (e) {}
+      const flash = takeFlash();
       const me = findPerson(local.me[roomId]);
       if (flash) toast(flash);
       else if (me) toast(`${me.emoji} ${me.name} 님 반가워요 👋`);
