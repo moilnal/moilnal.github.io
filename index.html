@@ -1303,11 +1303,35 @@
       }
     }
 
-    // 빈자리를 저장하려는데 그사이 다른 사람이 들어온 경우: 안내 + 최신 상태로 새로고침
-    function slotTaken() {
+    // 빈자리 저장 성공: 그 사람 입력 모드로 + 이 기기의 "나"로 기억
+    function joinedAs(id, name, emoji) {
+      if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
+      state.selectedId = id;          // 저장하면 바로 그 사람 입력 모드로
+      local.me[roomId] = id;          // 이 기기에서 "나는 이 사람"
+      saveLocal();
+      newEmoji = null;
       closeSheet();
-      toast('방금 다른 분이 이 자리에 들어왔어요. 다른 빈자리를 골라주세요');
-      refetch();
+      render();
+      toast(`${emoji} ${name} 님, 안 되는 날을 눌러주세요`);
+    }
+
+    // 빈자리를 저장하려는데 그사이 자리가 다 찬 경우 (서버가 room_full 로 거절, 덮어쓰지 않음)
+    // → 최신 상태로 새로고침 후 [한 자리 늘리고 들어가기] / [취소]
+    async function slotTaken(name, emoji) {
+      closeSheet();
+      await refetch();
+      if (state.size >= MAX_PEOPLE) {
+        return toast(`방금 빈자리가 다 찼어요. 최대 ${MAX_PEOPLE}명까지 참여할 수 있어요`);
+      }
+      confirmSheet('방금 빈자리가 다 찼어요', `${emoji} ${name} 님으로 들어가려면 한 자리를 늘려요.`,
+        '한 자리 늘리고 들어가기', async () => {
+          const size = Math.min(MAX_PEOPLE, Math.max(state.size, state.participants.length) + 1);
+          const grow = await write('set_room_size', { p_size: size }, () => { state.size = size; });
+          if (!grow.ok) return;
+          const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
+          if (res.ok) return joinedAs(res.data, name, emoji);
+          if (res.error && res.error.message === 'room_full') slotTaken(name, emoji);   // 또 누가 먼저 들어옴
+        }, 'primary');
     }
 
     // 빈자리 칩을 누르면: 이모지 버튼 + 이름 입력 + 저장
@@ -1351,29 +1375,20 @@
           const name = input.value.trim();
           if (!name) return toast('이름을 입력해주세요');
           if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
-          if (emptySlots() <= 0) return slotTaken();   // 팝업을 연 사이 실시간으로 자리가 찼음
+          const emoji = newEmoji;
+          if (emptySlots() <= 0) return slotTaken(name, emoji);   // 팝업을 연 사이 실시간으로 자리가 찼음
 
           saving = true;
           saveBtn.disabled = true;
-          const emoji = newEmoji;
           const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji });
           saving = false;
           saveBtn.disabled = false;
           if (!res.ok) {
             // 서버가 모임을 잠그고 인원을 세서, 그사이 다른 사람이 자리를 채웠으면 room_full 로 거절함 (덮어쓰지 않음)
-            if (res.error && res.error.message === 'room_full') slotTaken();
+            if (res.error && res.error.message === 'room_full') slotTaken(name, emoji);
             return;
           }
-
-          const id = res.data;
-          if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
-          state.selectedId = id;          // 저장하면 바로 그 사람 입력 모드로
-          local.me[roomId] = id;          // 이 기기에서 "나는 이 사람"
-          saveLocal();
-          newEmoji = null;
-          closeSheet();
-          render();
-          toast(`${emoji} ${name} 님, 안 되는 날을 눌러주세요`);
+          joinedAs(res.data, name, emoji);
         };
         saveBtn.addEventListener('click', submit);
         input.addEventListener('keydown', e => {
