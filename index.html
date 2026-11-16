@@ -1582,9 +1582,12 @@
         h('span', 'banner-title', `📌 ${shortLabel(date)} 모일날!`),
         h('span', 'dday', diff === 0 ? 'D-DAY' : `D-${diff}`)
       );
+      const calBtn = h('button', 'banner-btn', '📆');
+      calBtn.setAttribute('aria-label', '내 캘린더에 추가');
+      calBtn.addEventListener('click', () => openCalendarSheet(c.key));
       const changeBtn = h('button', 'banner-btn', changing ? '닫기' : '변경');
       changeBtn.addEventListener('click', () => { changing = !changing; render(); });
-      main.append(changeBtn);
+      main.append(calBtn, changeBtn);
       banner.append(main);
 
       // 확정한 뒤에 새로 "안 된다"고 한 사람이 있으면 경고
@@ -1594,6 +1597,99 @@
         banner.append(h('div', 'banner-warn',
           `⚠️ ${newcomers.map(p => p.name).join(', ')} 님이 이 날 안 된대요`));
       }
+    }
+
+    // ===== 내 캘린더에 추가 (확정 날짜, 종일 일정) =====
+    function roomLink() {
+      return location.origin + location.pathname + '?g=' + encodeURIComponent(roomId);
+    }
+
+    // '2026-11-07' → '20261107', 다음 날도 같은 형식 (종일 일정은 끝 날짜가 다음 날)
+    function calDates(key) {
+      const d = keyToDate(key);
+      const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      const fmt = x => dateKey(x.getFullYear(), x.getMonth(), x.getDate()).replace(/-/g, '');
+      return { start: fmt(d), end: fmt(next) };
+    }
+
+    function openCalendarSheet(key) {
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', '내 캘린더에 추가'));
+        const col = h('div', 'menu');
+        const google = h('button', '', '구글 캘린더');
+        const ics = h('button', '', '아이폰 · 다른 캘린더');
+        google.addEventListener('click', () => { closeSheet(); addToGoogle(key); });
+        ics.addEventListener('click', () => { closeSheet(); downloadIcs(key); });
+        col.append(google, ics);
+        body.append(col);
+      });
+    }
+
+    function addToGoogle(key) {
+      const { start, end } = calDates(key);
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: `[${state.name}] 모일날 📌`,
+        dates: `${start}/${end}`,
+        details: roomLink()
+      });
+      window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank');
+    }
+
+    // .ics 글자 이스케이프 + 75바이트마다 줄 접기 (표준 규칙)
+    function icsText(s) {
+      return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    }
+    function icsFold(line) {
+      const enc = new TextEncoder();
+      const out = [];
+      let cur = '', bytes = 0;
+      for (const ch of line) {
+        const n = enc.encode(ch).length;
+        if (bytes + n > (out.length ? 74 : 75)) { out.push(cur); cur = ''; bytes = 0; }
+        cur += ch; bytes += n;
+      }
+      out.push(cur);
+      return out.join('\r\n ');
+    }
+
+    function downloadIcs(key) {
+      // 카카오톡 안 브라우저는 파일 다운로드가 막힐 수 있어서 외부 브라우저로 연다
+      if (/KAKAOTALK/i.test(navigator.userAgent)) {
+        toast('브라우저에서 다시 [📆]를 눌러주세요');
+        setTimeout(() => {
+          location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(roomLink());
+        }, 600);
+        return;
+      }
+      const { start, end } = calDates(key);
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//moilnal//KO',
+        'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT',
+        // 모임ID-날짜로 고정: 두 번 추가해도 같은 일정으로 인식
+        `UID:${roomId}-${start}@moilnal.github.io`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${start}`,
+        `DTEND;VALUE=DATE:${end}`,
+        `SUMMARY:${icsText(`[${state.name}] 모일날 📌`)}`,
+        `DESCRIPTION:${icsText(roomLink())}`,
+        `URL:${roomLink()}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ];
+      const blob = new Blob([lines.map(icsFold).join('\r\n') + '\r\n'], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `moilnal-${start}.ics`;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
     function confirmDate(date, key) {
