@@ -291,8 +291,10 @@
     .tl-bar i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #c9b8ec; }
     .tl-row.all .tl-bar i { background: var(--ok); }
     .tl-more { margin: 2px 0 4px 32px; border: none; background: none; color: var(--accent-deep); font-size: 13px; font-weight: 700; cursor: pointer; }
-    .tl-scale { display: flex; justify-content: space-between; margin-left: 32px; font-size: 10px; color: var(--muted); }
+    .tl-scale { position: relative; height: 14px; margin-left: 32px; font-size: 10px; color: var(--muted); }
+    .tl-scale span { position: absolute; transform: translateX(-50%); }
     .tl-sum { margin-top: 6px; font-size: 14px; font-weight: 700; color: #2f8a5b; }
+    .tl-basis { margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--muted); }
 
     .hint {
       margin-top: 10px;
@@ -2031,12 +2033,19 @@
       }
       const common = commonRange(key);
       box.append(row('✅', common ? common.s : null, common ? common.e : null, 'all'));
+      // 눈금: 슬라이더와 같은 10 · 14 · 18 · 22 · 24
       const scale = h('div', 'tl-scale');
-      scale.append(h('span', '', '10시'), h('span', '', '17시'), h('span', '', '24시'));
+      for (const x of [10, 14, 18, 22, 24]) {
+        const t = h('span', '', String(x));
+        t.style.left = `${pct(x)}%`;
+        scale.append(t);
+      }
       box.append(scale);
-      box.append(h('p', 'tl-sum', common
+      const sum = h('p', 'tl-sum', common
         ? (rangeText(common) === '종일' ? '하루 종일 모두 가능' : `${rangeText(common)} 모두 가능`)
-        : '모두 되는 시간이 없어요'));
+        : '모두 되는 시간이 없어요');
+      sum.append(h('small', 'tl-basis', `❤️ ${list.length}명 기준`));
+      box.append(sum);
       return box;
     }
 
@@ -2075,10 +2084,10 @@
 
     function renderRecommend() {
       const rec = $('rec');
-      const anyAnswered = state.participants.some(p => p.done) || Object.keys(state.votes).length > 0;
       const recs = candidateDates();
-      // 아직 아무도 응답 안 했거나, 확정된 날이 있거나(변경 중 제외), 보고 있는 달에 후보가 없으면 숨김
-      const show = anyAnswered && (!activeConfirmed() || changing) && recs.length > 0;
+      // 이름 있는 참여자가 없거나, 확정된 날이 있거나(변경 중 제외), 보고 있는 달에 후보가 없으면 숨김
+      // (첫 사람도 바로 ❤️를 누를 수 있게 응답 여부와 상관없이 표시)
+      const show = state.participants.length > 0 && (!activeConfirmed() || changing) && recs.length > 0;
       rec.hidden = !show;
       if (!show) return;
 
