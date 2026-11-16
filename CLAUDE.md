@@ -42,7 +42,7 @@
 * 똑똑한 달력: 처음 보여줄 달 자동 선택, 보고 있는 달 기준 추천
 * 주소 이전: https://moilnal.github.io/ (저장소 moilnal/moilnal.github.io)
 * 빈자리 꽉 찼을 때 "방금 빈자리가 다 찼어요" + [한 자리 늘리고 들어가기]
-* 응답 간소화: 안 되는 날을 하나라도 찍으면 자동 응답 완료(전부 해제하면 미응답), 표시 0개면 [다 돼요 👍], [다 찍었어요]는 닫기만 (서버: `supabase/003_auto_responded.sql`)
+* 응답 간소화: 안 되는 날을 하나라도 찍으면 자동 응답 완료(이후 전부 해제해도 응답 완료 유지), 표시 0개면 [다 돼요 👍], [다 찍었어요]는 닫기만 (서버: `supabase/003_auto_responded.sql`, `004_keep_responded.sql`)
 
 **다음 할 일**
 
@@ -91,7 +91,7 @@
 * [+]는 빈자리 추가, [-]는 빈자리부터 제거하고 빈자리가 없으면 "누구를 뺄까요?" → 확인 후 그 사람 데이터 삭제
 * 빈자리 칩(점선, "❔ 빈자리") 탭 → 이모지 + 이름 입력 팝업, 저장하면 그 사람 입력 모드
   * 동시 저장 방지: 저장하는 사이 자리가 다 찼으면 덮어쓰지 않고(서버 `save_member`가 모임을 잠그고 인원을 세서 `room_full`로 거절) 최신 상태로 새로고침 후 "방금 빈자리가 다 찼어요" + [한 자리 늘리고 들어가기](인원 +1 → 입력했던 이름/이모지로 바로 저장 → 입력 모드) / [취소]. 이미 15명이면 "최대 15명까지 참여할 수 있어요" 안내만
-* 응답 완료(칩에 ✓)는 앱이 추론: 안 되는 날을 하나라도 표시하면 자동 응답 완료(서버 `toggle_unavailable`이 저장, 실시간 반영), 전부 해제하면 다시 미응답. 미응답 칩은 살짝 흐리게
+* 응답 완료(칩에 ✓)는 앱이 추론: 안 되는 날을 하나라도 표시하면 자동 응답 완료(서버 `toggle_unavailable`이 저장, 실시간 반영), 한 번 응답 완료되면 전부 해제해도 유지. 미응답 칩은 살짝 흐리게
   * 입력 모드에서 표시한 날이 하나도 없고 미응답이면 [다 돼요 👍] → 응답 완료 (`set_responded`)
   * [다 찍었어요]는 입력 모드를 닫기만 함 (응답 상태는 바꾸지 않음)
 * 상단 오른쪽 ⚙️ 메뉴는 아래 "4단계 공유 설계"의 설정 메뉴 참고
@@ -170,7 +170,7 @@
 
 * 테이블: `rooms`(모임, 인원수·확정 날짜·마지막 접속 시각), `members`(참여자), `unavailable`(안 되는 날), `room_reset_backups`(초기화 되돌리기용 24시간 보관)
 * 단계별 데이터는 독립 테이블. 시간/지역/장소/정산은 나중에 `room_id`를 가진 새 테이블로 추가
-* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신
+* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신 + (004) 해제해도 응답 완료 유지
 * 실시간: 쓰기 RPC가 끝나면 서버가 모임 ID 이름의 Realtime broadcast 채널로 "changed" 알림을 보내고, 화면은 알림을 받으면 `get_room`으로 다시 불러온다 (RLS 때문에 postgres_changes 구독은 쓰지 않음)
   * 서버 알림은 공개 채널(`realtime.send(..., private => false)`)이라 anon이 별도 정책 없이 받을 수 있음 (실제 수신 확인함)
   * 다시 불러오기는 300ms 모아서 한 번, 저장 중에는 미룸. 탭 복귀·재연결 시에도 다시 불러옴

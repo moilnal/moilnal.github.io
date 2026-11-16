@@ -1953,9 +1953,9 @@
         else list.push(me);
         if (list.length) state.marks[key] = list;
         else delete state.marks[key];
-        // 하나라도 표시하면 응답 완료, 전부 해제하면 미응답 (서버와 같은 규칙)
+        // 하나라도 표시하면 응답 완료, 해제해도 유지 (서버와 같은 규칙)
         const person = findPerson(me);
-        if (person) person.done = hasMarks(me);
+        if (person && hasMarks(me)) person.done = true;
       });
     }
 
