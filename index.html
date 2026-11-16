@@ -1612,6 +1612,15 @@
       return { start: fmt(d), end: fmt(next) };
     }
 
+    // 일정 제목/설명 (구글 캘린더, .ics 공통)
+    function calTitle() {
+      const name = state.name === DEFAULT_ROOM_NAME ? '친구들 모임' : state.name;
+      return `${name} 📌`;
+    }
+    function calDetails() {
+      return `모일날에서 정한 약속이에요\n${roomLink()}`;
+    }
+
     function openCalendarSheet(key) {
       openSheet(body => {
         body.append(h('h3', 'sheet-title', '내 캘린더에 추가'));
@@ -1629,9 +1638,9 @@
       const { start, end } = calDates(key);
       const params = new URLSearchParams({
         action: 'TEMPLATE',
-        text: `[${state.name}] 모일날 📌`,
+        text: calTitle(),
         dates: `${start}/${end}`,
-        details: roomLink()
+        details: calDetails()
       });
       window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank');
     }
@@ -1675,8 +1684,8 @@
         `DTSTAMP:${stamp}`,
         `DTSTART;VALUE=DATE:${start}`,
         `DTEND;VALUE=DATE:${end}`,
-        `SUMMARY:${icsText(`[${state.name}] 모일날 📌`)}`,
-        `DESCRIPTION:${icsText(roomLink())}`,
+        `SUMMARY:${icsText(calTitle())}`,
+        `DESCRIPTION:${icsText(calDetails())}`,
         `URL:${roomLink()}`,
         'END:VEVENT',
         'END:VCALENDAR'
