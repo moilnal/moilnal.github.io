@@ -169,59 +169,130 @@
     .chip .check { margin-left: 4px; color: var(--ok); font-weight: 800; }
 
     /* 추천 줄: "✨ 추천" + 날짜 칩 3개 */
+    /* 후보 줄: "✨ 12월 후보" + 날짜 칩 최대 5개 (가로 스크롤, 마지막 칩이 살짝 잘려 보이게) */
     .rec {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid var(--line);
     }
     .rec[hidden] { display: none; }
-    .rec-label {
-      flex: none;
-      display: flex;
-      flex-direction: column;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.25;
-      white-space: nowrap;
-    }
-    .rec-label small { font-size: 10px; font-weight: 600; color: var(--muted); }
-    .rec-chips {
-      flex: 1;
-      min-width: 0;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-    .rec-chip {
-      height: 34px;
-      padding: 0 4px;
-      border: 1.5px solid;
-      border-radius: 17px;
+    .rec-label { display: flex; align-items: baseline; gap: 6px; font-size: 13px; font-weight: 700; }
+    .rec-label small { font-size: 11px; font-weight: 600; color: var(--muted); }
+    .rec-top {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 4px;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 6px 6px 6px 12px;
+      border-radius: 12px;
+      background: var(--accent-deep);
+      color: #fff;
       font-size: 13px;
       font-weight: 700;
+    }
+    .rec-top[hidden] { display: none; }
+    .rec-chips {
+      display: flex;
+      gap: 6px;
+      margin: 8px -14px 0 0;
+      padding-right: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .rec-chips::-webkit-scrollbar { display: none; }
+    .rec-chip {
+      flex: 0 0 29%;
+      padding: 7px 4px;
+      border: 1.5px solid;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
     }
+    .rec-chip .rc-date { font-size: 13px; font-weight: 800; }
+    .rec-chip .rc-heart { color: #c2410c; }
+    .rec-chip .rc-time { color: var(--text); }
     .rec-chip.ok { background: #eaf8f0; border-color: #bfe6cf; color: #2f8a5b; }
     .rec-chip.some { background: #fdeef0; border-color: #f5c9cf; color: #a33d4b; }
-    .rec-chip .n {
-      min-width: 15px;
-      height: 15px;
-      padding: 0 4px;
-      border-radius: 8px;
-      background: var(--sun);
-      color: #fff;
-      font-size: 10px;
-      line-height: 15px;
-      text-align: center;
+    .rec-chip.mine { box-shadow: 0 0 0 2px var(--accent); }
+
+    /* ❤️ 투표 시트 */
+    .heart-btn {
+      width: 100%;
+      height: 48px;
+      border: 1.5px solid #f5c9cf;
+      border-radius: 14px;
+      background: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
     }
+    .heart-btn.on { background: #fdeef0; border-color: var(--sun); }
+    .pick-label { margin: 16px 0 8px; font-size: 14px; font-weight: 700; }
+
+    /* 범위 슬라이더 (손잡이 44px) */
+    .range { padding: 0 22px; }
+    .range.off { opacity: 0.4; pointer-events: none; }
+    .range-text { text-align: center; font-size: 15px; font-weight: 700; color: var(--accent-deep); margin-bottom: 8px; }
+    .range-track { position: relative; height: 44px; touch-action: none; }
+    .range-track::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 19px;
+      height: 6px;
+      border-radius: 3px;
+      background: #ece7f4;
+    }
+    .range-fill { position: absolute; top: 19px; height: 6px; border-radius: 3px; background: var(--accent); }
+    .range-knob {
+      position: absolute;
+      top: 0;
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 6px rgba(80, 60, 120, 0.3), inset 0 0 0 3px var(--accent);
+      touch-action: none;
+      cursor: grab;
+    }
+    .range-ticks { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
+    .range-ticks span { position: absolute; transform: translateX(-50%); }
+
+    /* 확정 시트: 시각 칩 한 줄 */
+    .hour-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .hour-chips::-webkit-scrollbar { display: none; }
+    .hour-chip {
+      flex: none;
+      height: 36px;
+      padding: 0 12px;
+      border: 1.5px solid #e2dcef;
+      border-radius: 18px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .hour-chip.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+
+    /* 상세 시트: ❤️ 줄 + 시간 타임라인 */
+    .hearts-row { margin: 4px 0 12px; font-size: 15px; font-weight: 700; }
+    .timeline { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .tl-row { display: flex; align-items: center; gap: 8px; height: 26px; }
+    .tl-who { width: 24px; text-align: center; font-size: 17px; }
+    .tl-bar { position: relative; flex: 1; height: 10px; border-radius: 5px; background: #f1eef6; }
+    .tl-bar i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #c9b8ec; }
+    .tl-row.all .tl-bar i { background: var(--ok); }
+    .tl-more { margin: 2px 0 4px 32px; border: none; background: none; color: var(--accent-deep); font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tl-scale { display: flex; justify-content: space-between; margin-left: 32px; font-size: 10px; color: var(--muted); }
+    .tl-sum { margin-top: 6px; font-size: 14px; font-weight: 700; color: #2f8a5b; }
 
     .hint {
       margin-top: 10px;
@@ -868,7 +939,8 @@
         <div id="hint" class="hint"></div>
         <div id="banner" class="banner" hidden></div>
         <div id="rec" class="rec" hidden>
-          <div class="rec-label"><span id="recTitle">✨ 추천</span><small id="recPending">(응답 중)</small></div>
+          <div class="rec-label"><span id="recTitle">✨ 후보</span><small id="recPending">(응답 중)</small></div>
+          <div id="recTop" class="rec-top" hidden></div>
           <div id="recChips" class="rec-chips"></div>
         </div>
       </section>
@@ -943,7 +1015,8 @@
       room_not_found: '모임을 찾을 수 없어요',
       room_deleted: '삭제된 모임이에요',
       restore_expired: '삭제한 지 24시간이 지나서 복구할 수 없어요',
-      invalid_room_name: '모임 이름은 1~20자로 써주세요'
+      invalid_room_name: '모임 이름은 1~20자로 써주세요',
+      invalid_hours: '고를 수 없는 시간이에요'
     };
     const DEFAULT_ROOM_NAME = '새 모임';
     const FLASH_KEY = 'moilnal-flash';   // 다른 모임으로 이동한 뒤 보여줄 안내 (sessionStorage)
@@ -975,7 +1048,8 @@
       size: DEFAULT_SIZE,
       participants: [],     // [{ id, name, emoji, done }]
       marks: {},            // { '2026-11-12': [참여자 id, ...] }
-      confirmed: null,      // { key: '2026-11-07', known: [id, ...] }
+      votes: {},            // ❤️ 투표 + 가능 시간 { '2026-12-06': [{ id, s: 19, e: 24 }, ...] }
+      confirmed: null,      // { key: '2026-11-07', known: [id, ...], hour: 19 | null }
       undoUntil: null,      // 초기화 되돌리기 가능한 시각
       selectedId: null      // 지금 입력 중인 사람 (null이면 보기 모드)
     };
@@ -1080,7 +1154,7 @@
       writeSeq++;
       const backup = JSON.stringify({
         name: state.name, size: state.size, participants: state.participants,
-        marks: state.marks, confirmed: state.confirmed, undoUntil: state.undoUntil
+        marks: state.marks, votes: state.votes, confirmed: state.confirmed, undoUntil: state.undoUntil
       });
       if (optimistic) { optimistic(); render(); }
 
@@ -1170,8 +1244,9 @@
         id: m.id, name: m.name, emoji: m.emoji, done: m.responded
       }));
       state.marks = data.unavailable || {};
+      state.votes = data.votes || {};
       state.confirmed = data.confirmed
-        ? { key: data.confirmed.date, known: data.confirmed.known || [] }
+        ? { key: data.confirmed.date, known: data.confirmed.known || [], hour: data.confirmed.hour ?? null }
         : null;
       state.undoUntil = data.undo_until ? new Date(data.undo_until) : null;
       if (state.selectedId && !findPerson(state.selectedId)) state.selectedId = null;
@@ -1571,7 +1646,7 @@
       // 확정 날짜가 지났으면 "지난 모임"
       if (c.key < todayKey()) {
         banner.className = 'banner past';
-        banner.append(h('div', 'banner-main', `지난 모임: ${shortLabel(date)}`));
+        banner.append(h('div', 'banner-main', `지난 모임: ${confirmedLabel(c)}`));
         return;
       }
 
@@ -1579,7 +1654,7 @@
       const main = h('div', 'banner-main');
       const diff = Math.round((date - today) / 86400000);
       main.append(
-        h('span', 'banner-title', `📌 ${shortLabel(date)} 모일날!`),
+        h('span', 'banner-title', `📌 ${confirmedLabel(c)}`),
         h('span', 'dday', diff === 0 ? 'D-DAY' : `D-${diff}`)
       );
       const calBtn = h('button', 'banner-btn', '📆');
@@ -1604,12 +1679,20 @@
       return location.origin + location.pathname + '?g=' + encodeURIComponent(roomId);
     }
 
-    // '2026-11-07' → '20261107', 다음 날도 같은 형식 (종일 일정은 끝 날짜가 다음 날)
+    // 확정 시각이 있으면 그 시각부터 3시간(UTC '20261206T100000Z'),
+    // 없으면 종일 일정('20261206' ~ 다음 날 '20261207')
     function calDates(key) {
       const d = keyToDate(key);
+      const hour = state.confirmed && state.confirmed.key === key ? state.confirmed.hour : null;
+      if (hour != null) {
+        const utc = x => x.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+        const from = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour);
+        const to = new Date(from.getTime() + 3 * 3600000);
+        return { timed: true, start: utc(from), end: utc(to), id: dateKey(d.getFullYear(), d.getMonth(), d.getDate()).replace(/-/g, '') };
+      }
       const next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
       const fmt = x => dateKey(x.getFullYear(), x.getMonth(), x.getDate()).replace(/-/g, '');
-      return { start: fmt(d), end: fmt(next) };
+      return { timed: false, start: fmt(d), end: fmt(next), id: fmt(d) };
     }
 
     // 일정 제목/설명 (구글 캘린더, .ics 공통)
@@ -1671,7 +1754,7 @@
         }, 600);
         return;
       }
-      const { start, end } = calDates(key);
+      const { timed, start, end, id } = calDates(key);
       const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
       const lines = [
         'BEGIN:VCALENDAR',
@@ -1680,10 +1763,10 @@
         'CALSCALE:GREGORIAN',
         'BEGIN:VEVENT',
         // 모임ID-날짜로 고정: 두 번 추가해도 같은 일정으로 인식
-        `UID:${roomId}-${start}@moilnal.github.io`,
+        `UID:${roomId}-${id}@moilnal.github.io`,
         `DTSTAMP:${stamp}`,
-        `DTSTART;VALUE=DATE:${start}`,
-        `DTEND;VALUE=DATE:${end}`,
+        timed ? `DTSTART:${start}` : `DTSTART;VALUE=DATE:${start}`,
+        timed ? `DTEND:${end}` : `DTEND;VALUE=DATE:${end}`,
         `SUMMARY:${icsText(calTitle())}`,
         `DESCRIPTION:${icsText(calDetails())}`,
         `URL:${roomLink()}`,
@@ -1694,7 +1777,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `moilnal-${start}.ics`;
+      a.download = `moilnal-${id}.ics`;
       document.body.append(a);
       a.click();
       a.remove();
@@ -1715,26 +1798,254 @@
       }
       if (prev && prev.key !== key) desc += ` · 기존 확정(${shortLabel(keyToDate(prev.key))})은 취소돼요`;
 
-      confirmSheet(title, desc, '확정하기', async () => {
-        changing = false;
-        const res = await write('set_confirmed_date', { p_day: key }, () => {
-          state.confirmed = { key, known: people.map(p => p.id) };   // 확정은 한 번에 하나만
+      // 시각 선택 (기본값: ❤️한 사람들이 모두 되는 시간의 시작, 없으면 "시각 없음")
+      const common = commonRange(key);
+      let hour = common && common.s <= 23 && (common.s > HOUR_MIN || common.e < HOUR_MAX) ? common.s : null;
+
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', title), h('p', 'sheet-desc', desc));
+        body.append(h('div', 'pick-label', '몇 시에 만나요? (선택)'));
+        const row = h('div', 'hour-chips');
+        const opts = [null];
+        for (let x = HOUR_MIN; x < HOUR_MAX; x++) opts.push(x);
+        const btns = [];
+        for (const x of opts) {
+          const b = h('button', 'hour-chip' + (x === hour ? ' on' : ''), x == null ? '시각 없음' : hourLabel(x));
+          b.addEventListener('click', () => {
+            hour = x;
+            btns.forEach((o, i) => o.classList.toggle('on', opts[i] === hour));
+          });
+          btns.push(b);
+          row.append(b);
+        }
+        body.append(row);
+        const sel = btns[opts.indexOf(hour)];
+        setTimeout(() => sel && sel.scrollIntoView({ block: 'nearest', inline: 'center' }), 50);
+
+        const actions = h('div', 'btn-row sheet-actions');
+        const cancelBtn = h('button', 'btn ghost', '취소');
+        const okBtn = h('button', 'btn primary', '확정하기');
+        cancelBtn.addEventListener('click', closeSheet);
+        okBtn.addEventListener('click', async () => {
+          closeSheet();
+          changing = false;
+          const res = await write('confirm_date', { p_day: key, p_hour: hour }, () => {
+            state.confirmed = { key, known: people.map(p => p.id), hour };   // 확정은 한 번에 하나만
+          });
+          if (res.ok) toast(`📌 ${confirmedLabel(state.confirmed)}로 확정했어요`);
         });
-        if (res.ok) toast(`📌 ${label}로 확정했어요`);
-      }, 'primary');
+        actions.append(cancelBtn, okBtn);
+        body.append(actions);
+      });
     }
 
     function cancelConfirm(date) {
       confirmSheet('확정을 취소할까요?', `${shortLabel(date)} 확정이 취소돼요.`, '확정 취소', async () => {
         changing = false;
-        const res = await write('set_confirmed_date', { p_day: null }, () => { state.confirmed = null; });
+        const res = await write('confirm_date', { p_day: null, p_hour: null }, () => { state.confirmed = null; });
         if (res.ok) toast('확정을 취소했어요');
       });
     }
 
-    // ===== 추천 날짜 =====
-    // 지금 보고 있는 달에서(오늘·지난 날 제외): 안 되는 사람 적은 날 → 금·토·일 → 가까운 날 순서로 3개
-    function recommendDates() {
+    // ===== 시간 (❤️ 투표의 가능 시간, 확정 시각) =====
+    const HOUR_MIN = 10;   // 가능 시간 범위: 10시 ~ 24시(자정)
+    const HOUR_MAX = 24;
+
+    // 19 → '오후 7시', 10 → '오전 10시', 12 → '오후 12시', 24 → '자정'
+    function hourLabel(x) {
+      if (x === 24) return '자정';
+      if (x < 12) return `오전 ${x}시`;
+      return `오후 ${x === 12 ? 12 : x - 12}시`;
+    }
+
+    // 배너 등: '12/6 (토) 오후 7시' / 시각 없으면 '12/6 (토)'
+    function confirmedLabel(c) {
+      const base = shortLabel(keyToDate(c.key));
+      return c.hour != null ? `${base} ${hourLabel(c.hour)}` : base;
+    }
+
+    // 그 날 ❤️ 투표 목록 (참여자 순서, 지금 있는 사람만)
+    function votesOf(key) {
+      const list = state.votes[key] || [];
+      return list.filter(v => findPerson(v.id));
+    }
+    function myVote(key, id) {
+      return (state.votes[key] || []).find(v => v.id === id) || null;
+    }
+
+    // ❤️한 사람들이 모두 되는 시간 { s, e } (투표가 없거나 겹치지 않으면 null)
+    function commonRange(key) {
+      const list = votesOf(key);
+      if (!list.length) return null;
+      const s = Math.max(...list.map(v => v.s));
+      const e = Math.min(...list.map(v => v.e));
+      return s < e ? { s, e } : null;
+    }
+
+    // 칩/시트용 짧은 범위: '19~23시', 하루 종일이면 '종일'
+    function rangeText(r) {
+      if (r.s === HOUR_MIN && r.e === HOUR_MAX) return '종일';
+      return `${r.s}~${r.e}시`;
+    }
+
+    // 입력 모드: 후보 칩 탭 → 내 ❤️ 켜고 투표 시트
+    function voteForDate(date, key) {
+      const me = state.selectedId;
+      if (!myVote(key, me)) toggleVote(key, me);
+      showVoteSheet(date, key);
+    }
+
+    function toggleVote(key, me) {
+      write('toggle_vote', { p_member_id: me, p_day: key }, () => {
+        const list = state.votes[key] || [];
+        const i = list.findIndex(v => v.id === me);
+        if (i >= 0) list.splice(i, 1);
+        else {
+          list.push({ id: me, s: HOUR_MIN, e: HOUR_MAX });
+          const person = findPerson(me);
+          if (person) person.done = true;   // ❤️도 응답 (한 번 응답하면 유지)
+        }
+        if (list.length) state.votes[key] = list;
+        else delete state.votes[key];
+      });
+    }
+
+    function showVoteSheet(date, key) {
+      const me = state.selectedId;
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', shortLabel(date)));
+
+        const heart = h('button', 'heart-btn');
+        const slider = rangeSlider();
+        const paint = () => {
+          const v = myVote(key, me);
+          heart.classList.toggle('on', !!v);
+          heart.textContent = v ? '❤️ 이 날 좋아요' : '🤍 이 날 좋아요';
+          slider.set(v ? v.s : HOUR_MIN, v ? v.e : HOUR_MAX, !!v);
+        };
+        heart.addEventListener('click', () => { toggleVote(key, me); paint(); });
+
+        slider.onChange = (s, e) => {
+          write('set_vote_hours', { p_member_id: me, p_day: key, p_start: s, p_end: e }, () => {
+            const v = myVote(key, me);
+            if (v) { v.s = s; v.e = e; }
+          });
+        };
+
+        body.append(heart, h('div', 'pick-label', '몇 시부터 몇 시까지 돼요? (선택)'), slider.el);
+        const close = h('button', 'btn ghost full sheet-actions', '닫기');
+        close.addEventListener('click', closeSheet);
+        body.append(close);
+        paint();
+      });
+    }
+
+    // 양쪽 손잡이 범위 슬라이더 (10~24시, 1시간 단위)
+    function rangeSlider() {
+      const el = h('div', 'range');
+      const text = h('div', 'range-text');
+      const track = h('div', 'range-track');
+      const fill = h('div', 'range-fill');
+      const a = h('div', 'range-knob');
+      const b = h('div', 'range-knob');
+      const ticks = h('div', 'range-ticks');
+      for (const x of [10, 14, 18, 22, 24]) {
+        const t = h('span', '', x === 24 ? '24' : String(x));
+        t.style.left = `${((x - HOUR_MIN) / (HOUR_MAX - HOUR_MIN)) * 100}%`;
+        ticks.append(t);
+      }
+      track.append(fill, a, b);
+      el.append(text, track, ticks);
+
+      const api = { el, onChange: null, s: HOUR_MIN, e: HOUR_MAX, enabled: true };
+      const pct = x => ((x - HOUR_MIN) / (HOUR_MAX - HOUR_MIN)) * 100;
+      const draw = () => {
+        a.style.left = `${pct(api.s)}%`;
+        b.style.left = `${pct(api.e)}%`;
+        fill.style.left = `${pct(api.s)}%`;
+        fill.style.width = `${pct(api.e) - pct(api.s)}%`;
+        text.textContent = api.s === HOUR_MIN && api.e === HOUR_MAX
+          ? '하루 종일 돼요'
+          : `${hourLabel(api.s)} ~ ${hourLabel(api.e)}`;
+        el.classList.toggle('off', !api.enabled);
+      };
+      api.set = (s, e, enabled) => { api.s = s; api.e = e; api.enabled = enabled; draw(); };
+
+      const hourAt = clientX => {
+        const r = track.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+        return Math.round(HOUR_MIN + ratio * (HOUR_MAX - HOUR_MIN));
+      };
+      const drag = which => ev => {
+        if (!api.enabled) return;
+        ev.preventDefault();
+        const knob = which === 's' ? a : b;
+        knob.setPointerCapture(ev.pointerId);
+        const before = [api.s, api.e];
+        const move = e2 => {
+          const x = hourAt(e2.clientX);
+          if (which === 's') api.s = Math.min(x, api.e - 1);
+          else api.e = Math.max(x, api.s + 1);
+          draw();
+        };
+        const up = () => {
+          knob.removeEventListener('pointermove', move);
+          knob.removeEventListener('pointerup', up);
+          knob.removeEventListener('pointercancel', up);
+          if ((before[0] !== api.s || before[1] !== api.e) && api.onChange) api.onChange(api.s, api.e);
+        };
+        knob.addEventListener('pointermove', move);
+        knob.addEventListener('pointerup', up);
+        knob.addEventListener('pointercancel', up);
+      };
+      a.addEventListener('pointerdown', drag('s'));
+      b.addEventListener('pointerdown', drag('e'));
+      draw();
+      return api;
+    }
+
+    // 상세 시트의 시간 타임라인: 사람별 가능 막대 (최대 5명 + 더 보기) + "✅ 모두 가능"
+    function timeline(key) {
+      const list = votesOf(key);
+      const box = h('div', 'timeline');
+      const pct = x => ((x - HOUR_MIN) / (HOUR_MAX - HOUR_MIN)) * 100;
+      const row = (label, s, e, cls) => {
+        const r = h('div', 'tl-row' + (cls ? ' ' + cls : ''));
+        const bar = h('div', 'tl-bar');
+        if (s != null) {
+          const seg = h('i');
+          seg.style.left = `${pct(s)}%`;
+          seg.style.width = `${pct(e) - pct(s)}%`;
+          bar.append(seg);
+        }
+        r.append(h('span', 'tl-who', label), bar);
+        return r;
+      };
+      const rows = list.map(v => row(findPerson(v.id).emoji, v.s, v.e));
+      const shown = rows.slice(0, 5);
+      box.append(...shown);
+      if (rows.length > 5) {
+        const more = h('button', 'tl-more', `더 보기 (${rows.length - 5}명)`);
+        more.addEventListener('click', () => { more.replaceWith(...rows.slice(5)); });
+        box.append(more);
+      }
+      const common = commonRange(key);
+      box.append(row('✅', common ? common.s : null, common ? common.e : null, 'all'));
+      const scale = h('div', 'tl-scale');
+      scale.append(h('span', '', '10시'), h('span', '', '17시'), h('span', '', '24시'));
+      box.append(scale);
+      box.append(h('p', 'tl-sum', common
+        ? (rangeText(common) === '종일' ? '하루 종일 모두 가능' : `${rangeText(common)} 모두 가능`)
+        : '모두 되는 시간이 없어요'));
+      return box;
+    }
+
+    // ===== 후보 날짜 =====
+    // 지금 보고 있는 달에서(오늘·지난 날 제외) 최대 5개
+    // ❤️ 있는 날 먼저(❤️ 많은 순 → 안 되는 사람 적은 순 → 가까운 날),
+    // 남는 자리는 기존 추천 기준(안 되는 사람 적은 날 → 금·토·일 → 가까운 날)
+    const MAX_CANDIDATES = 5;
+    function candidateDates() {
       const list = [];
       const year = current.getFullYear();
       const month = current.getMonth();
@@ -1747,38 +2058,61 @@
         list.push({
           date,
           key,
+          hearts: votesOf(key).length,
           count: unavailablePeople(key).length,
           weekend: dow === 5 || dow === 6 || dow === 0 ? 0 : 1,
           order: d
         });
       }
-      list.sort((a, b) => a.count - b.count || a.weekend - b.weekend || a.order - b.order);
-      return list.slice(0, 3);
+      const voted = list.filter(r => r.hearts > 0)
+        .sort((a, b) => b.hearts - a.hearts || a.count - b.count || a.order - b.order);
+      const rest = list.filter(r => r.hearts === 0)
+        .sort((a, b) => a.count - b.count || a.weekend - b.weekend || a.order - b.order);
+      const picked = voted.concat(rest).slice(0, MAX_CANDIDATES);
+      if (picked.length && picked[0].hearts > 0) picked[0].crown = true;   // 👑 ❤️ 최다
+      return picked;
     }
 
     function renderRecommend() {
       const rec = $('rec');
-      const anyAnswered = state.participants.some(p => p.done);
-      // 아직 아무도 응답 안 했거나, 확정된 날이 있으면(변경 중이 아닐 때) 숨김
-      const recs = recommendDates();
-      // 보고 있는 달에 추천할 날(오늘 이후)이 없어도 숨김
+      const anyAnswered = state.participants.some(p => p.done) || Object.keys(state.votes).length > 0;
+      const recs = candidateDates();
+      // 아직 아무도 응답 안 했거나, 확정된 날이 있거나(변경 중 제외), 보고 있는 달에 후보가 없으면 숨김
       const show = anyAnswered && (!activeConfirmed() || changing) && recs.length > 0;
       rec.hidden = !show;
       if (!show) return;
 
-      $('recTitle').textContent = `✨ ${current.getMonth() + 1}월 추천`;
+      $('recTitle').textContent = `✨ ${current.getMonth() + 1}월 후보`;
 
       const allAnswered = emptySlots() === 0 && state.participants.every(p => p.done);
       $('recPending').hidden = allAnswered;
+
+      // 모두 응답했고 ❤️가 있으면: 가장 인기 있는 날 + [확정하기]
+      const top = $('recTop');
+      top.innerHTML = '';
+      const crown = recs.find(r => r.crown);
+      top.hidden = !(allAnswered && crown && !state.selectedId);
+      if (!top.hidden) {
+        const go = h('button', 'banner-btn', '확정하기');
+        go.addEventListener('click', () => confirmDate(crown.date, crown.key));
+        top.append(h('span', '', `👑 ${shortLabel(crown.date)}가 가장 인기 있어요`), go);
+      }
 
       const box = $('recChips');
       box.innerHTML = '';
       for (const r of recs) {
         const d = r.date;
-        const chip = h('button', 'rec-chip ' + (r.count === 0 ? 'ok' : 'some'),
-          `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`);
-        if (r.count > 0) chip.append(h('span', 'n', r.count));
-        chip.addEventListener('click', () => goToDate(d, r.key));
+        const mine = state.selectedId && myVote(r.key, state.selectedId);
+        const chip = h('button', 'rec-chip ' + (r.count === 0 ? 'ok' : 'some') + (mine ? ' mine' : ''));
+        chip.append(h('span', 'rc-date', `${r.crown ? '👑 ' : ''}${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`));
+        if (r.hearts > 0) chip.append(h('span', 'rc-heart', `❤️ ${r.hearts}`));
+        const common = commonRange(r.key);
+        if (common) chip.append(h('span', 'rc-time', `${rangeText(common)} OK`));
+        chip.append(h('span', 'rc-no', r.count > 0 ? `${r.count}명 안 됨` : '모두 가능'));
+        chip.addEventListener('click', () => {
+          if (state.selectedId) voteForDate(d, r.key);   // 입력 모드: 내 ❤️ + 가능 시간
+          else goToDate(d, r.key);                        // 보기 모드: 그 날짜로 이동 + 상세
+        });
         box.append(chip);
       }
     }
@@ -1846,6 +2180,7 @@
                 state.size = DEFAULT_SIZE;
                 state.participants = [];
                 state.marks = {};
+                state.votes = {};
                 state.confirmed = null;
                 state.selectedId = null;
                 state.undoUntil = new Date(Date.now() + 86400000);
@@ -2095,6 +2430,14 @@
             ul.append(li);
           }
           body.append(ul);
+        }
+
+        // ❤️ 투표한 사람 + 가능 시간 타임라인
+        const voters = votesOf(key);
+        if (voters.length) {
+          body.append(h('div', 'hearts-row',
+            `❤️ ${voters.length}명 좋아요 · ${voters.map(v => findPerson(v.id).emoji).join(' ')}`));
+          body.append(timeline(key));
         }
 
         // 보기 모드에서만 확정/확정 취소 버튼 (지난 날짜·오늘은 확정 불가)
