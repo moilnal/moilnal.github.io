@@ -13,29 +13,42 @@
   <meta property="og:title" content="모일날 · 우리 언제 모일까? 📅">
   <meta property="og:description" content="안 되는 날만 콕! 모두 되는 날을 찾아드려요">
   <meta property="og:url" content="https://moilnal.github.io/">
-  <meta property="og:image" content="https://moilnal.github.io/og-image.png">
+  <meta property="og:image" content="https://moilnal.github.io/og-image.png?v=2">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="모일날 - 우리 언제 모일까?">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="모일날 · 우리 언제 모일까? 📅">
   <meta name="twitter:description" content="안 되는 날만 콕! 모두 되는 날을 찾아드려요">
-  <meta name="twitter:image" content="https://moilnal.github.io/og-image.png">
+  <meta name="twitter:image" content="https://moilnal.github.io/og-image.png?v=2">
+  <meta name="theme-color" content="#fff8ee">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
   <style>
+    /* 디자인 시스템 "밝고 경쾌하게" (CLAUDE.md 디자인 시스템 참고) */
     :root {
-      --bg: #f7f4fb;          /* 연한 라벤더 배경 */
+      --bg: #fff8ee;          /* 크림 배경 */
       --card: #ffffff;
-      --text: #3d3a4a;
-      --muted: #9a96a8;
-      --line: #ece8f3;
-      --accent: #a78bdb;      /* 파스텔 보라: 오늘, 선택 강조 */
-      --accent-soft: #efe9fa;
-      --accent-deep: #7c5cc4; /* 진한 보라: 확정된 날 */
-      --ok: #5bbf8a;          /* 초록: 모두 가능한 날, 응답 완료 */
-      --no-rgb: 224, 90, 106; /* 빨강: 안 되는 날 (배경 진하기에 사용) */
-      --sat: #4a7bd8;
-      --sun: #e05a6a;
+      --text: #3a2a1f;        /* 진한 갈색 본문 */
+      --muted: #8a7262;       /* 보조 글씨 */
+      --line: #f0e4d6;        /* 얇은 테두리·구분선 */
+      --accent: #ff7a59;      /* 코랄 포인트: 주요 버튼, 확정, 강조 칩 */
+      --accent-soft: #ffe9e1; /* 연한 코랄: 오늘, 선택된 칩 */
+      --accent-deep: #ff7a59; /* 확정된 날 (포인트와 같은 코랄) */
+      --accent-text: #e85a37; /* 코랄을 글씨로 쓸 때 */
+      --ok: #2bb3a3;          /* 청록: 모두 가능한 날, 응답 완료 */
+      --ok-soft: #dff5f1;
+      --ok-text: #1b8a7d;     /* 청록을 글씨로 쓸 때 */
+      --no-soft: #ffe6cc;     /* 주황: 안 되는 날 (연함 → 진함) */
+      --no-deep: #ffc999;
+      --no-text: #b85a1f;
+      --sat: #3d8bfd;
+      --sun: #ff5a5f;
+      --ink: #3a2a1f;         /* 스티커 테두리·그림자 */
+      --sticker-border: 2px solid var(--ink);
+      --sticker-shadow: 4px 4px 0 var(--ink);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,11 +70,12 @@
 
     /* 앱 이름은 작게 (그 아래 모임명이 크게) */
     h1 {
-      font-size: 15px;
-      font-weight: 800;
+      font-family: "Jua", "Pretendard", sans-serif;
+      font-weight: 400;
+      font-size: 18px;
       line-height: 40px;
       text-align: center;
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     .gear {
@@ -82,7 +96,8 @@
     .card {
       background: var(--card);
       border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(120, 100, 160, 0.08);
+      border: var(--sticker-border);
+      box-shadow: var(--sticker-shadow);
     }
 
     /* ---------- 참여자 영역 ---------- */
@@ -104,7 +119,7 @@
       border: none;
       border-radius: 50%;
       background: var(--accent-soft);
-      color: var(--accent);
+      color: var(--accent-text);
       font-size: 18px;
       font-weight: 700;
       line-height: 1;
@@ -122,7 +137,7 @@
       overflow: hidden;
     }
     .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width 0.25s; }
-    .progress.all { color: var(--ok); }
+    .progress.all { color: var(--ok-text); }
     .progress.all .bar i { background: var(--ok); }
 
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -145,8 +160,8 @@
     .chip.sel { opacity: 1; border-color: var(--accent); background: var(--accent-soft); }
     .chip.empty {
       border-style: dashed;
-      border-color: #cfc6e0;
-      background: #fcfbfe;
+      border-color: #d9c6b2;
+      background: #fffcf7;
       color: var(--muted);
     }
 
@@ -155,7 +170,7 @@
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: #f4f1f9;
+      background: #fbf3ea;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -175,7 +190,7 @@
 
     /* 칩의 이름 부분: 탭하면 입력 모드 */
     .chip .nm { padding-left: 7px; line-height: 34px; }
-    .chip .check { margin-left: 4px; color: var(--ok); font-weight: 800; }
+    .chip .check { margin-left: 4px; color: var(--ok-text); font-weight: 800; }
 
     /* 추천 줄: "✨ 추천" + 날짜 칩 3개 */
     /* 후보 줄: "✨ 12월 후보" + 날짜 칩 최대 5개 (가로 스크롤, 마지막 칩이 살짝 잘려 보이게) */
@@ -226,30 +241,30 @@
       cursor: pointer;
     }
     .rec-chip .rc-date { font-size: 13px; font-weight: 800; }
-    .rec-chip .rc-heart { color: #c2410c; }
+    .rec-chip .rc-heart { color: var(--accent-text); }
     .rec-chip .rc-time { color: var(--text); }
-    .rec-chip.ok { background: #eaf8f0; border-color: #bfe6cf; color: #2f8a5b; }
-    .rec-chip.some { background: #fdeef0; border-color: #f5c9cf; color: #a33d4b; }
+    .rec-chip.ok { background: var(--ok-soft); border-color: #a9e2d9; color: var(--ok-text); }
+    .rec-chip.some { background: var(--no-soft); border-color: var(--no-deep); color: var(--no-text); }
     .rec-chip.mine { box-shadow: 0 0 0 2px var(--accent); }
 
     /* ❤️ 투표 시트 */
     .heart-btn {
       width: 100%;
       height: 48px;
-      border: 1.5px solid #f5c9cf;
+      border: 1.5px solid #ffc9b8;
       border-radius: 14px;
       background: #fff;
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
     }
-    .heart-btn.on { background: #fdeef0; border-color: var(--sun); }
+    .heart-btn.on { background: var(--accent-soft); border-color: var(--accent); }
     .pick-label { margin: 16px 0 8px; font-size: 14px; font-weight: 700; }
 
     /* 범위 슬라이더 (손잡이 44px) */
     .range { padding: 0 22px; }
     .range.off { opacity: 0.4; pointer-events: none; }
-    .range-text { text-align: center; font-size: 15px; font-weight: 700; color: var(--accent-deep); margin-bottom: 8px; }
+    .range-text { text-align: center; font-size: 15px; font-weight: 700; color: var(--accent-text); margin-bottom: 8px; }
     .range-track { position: relative; height: 44px; touch-action: none; }
     .range-track::before {
       content: '';
@@ -257,7 +272,7 @@
       left: 0; right: 0; top: 19px;
       height: 6px;
       border-radius: 3px;
-      background: #ece7f4;
+      background: #f6ebde;
     }
     .range-fill { position: absolute; top: 19px; height: 6px; border-radius: 3px; background: var(--accent); }
     .range-knob {
@@ -268,7 +283,7 @@
       margin-left: -22px;
       border-radius: 50%;
       background: #fff;
-      box-shadow: 0 1px 6px rgba(80, 60, 120, 0.3), inset 0 0 0 3px var(--accent);
+      box-shadow: 0 1px 6px rgba(58, 42, 31, 0.25), inset 0 0 0 3px var(--accent);
       touch-action: none;
       cursor: grab;
     }
@@ -282,7 +297,7 @@
       flex: none;
       height: 36px;
       padding: 0 12px;
-      border: 1.5px solid #e2dcef;
+      border: 1.5px solid #eadccb;
       border-radius: 18px;
       background: #fff;
       font-size: 13px;
@@ -296,13 +311,13 @@
     .timeline { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
     .tl-row { display: flex; align-items: center; gap: 8px; height: 26px; }
     .tl-who { width: 24px; text-align: center; font-size: 17px; }
-    .tl-bar { position: relative; flex: 1; height: 10px; border-radius: 5px; background: #f1eef6; }
-    .tl-bar i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #c9b8ec; }
+    .tl-bar { position: relative; flex: 1; height: 10px; border-radius: 5px; background: #f6ebde; }
+    .tl-bar i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #ffb8a3; }
     .tl-row.all .tl-bar i { background: var(--ok); }
-    .tl-more { margin: 2px 0 4px 32px; border: none; background: none; color: var(--accent-deep); font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tl-more { margin: 2px 0 4px 32px; border: none; background: none; color: var(--accent-text); font-size: 13px; font-weight: 700; cursor: pointer; }
     .tl-scale { position: relative; height: 14px; margin-left: 32px; font-size: 10px; color: var(--muted); }
     .tl-scale span { position: absolute; transform: translateX(-50%); }
-    .tl-sum { margin-top: 6px; font-size: 14px; font-weight: 700; color: #2f8a5b; }
+    .tl-sum { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--ok-text); }
     .tl-basis { margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--muted); }
 
     .hint {
@@ -341,7 +356,7 @@
     .done-btn.ghost {
       padding: 0 12px;
       background: var(--card);
-      color: var(--accent) !important;
+      color: var(--accent-text) !important;
       box-shadow: inset 0 0 0 1.5px var(--accent);
     }
 
@@ -362,11 +377,11 @@
       border: none;
       border-radius: 50%;
       background: var(--accent-soft);
-      color: var(--accent);
+      color: var(--accent-text);
       font-size: 22px;
       cursor: pointer;
     }
-    .month-nav button:active { background: #e2d8f5; }
+    .month-nav button:active { background: #ffd9cc; }
 
     #title { font-size: 19px; font-weight: 700; }
 
@@ -421,9 +436,9 @@
 
     /* 추천 칩을 눌렀을 때 해당 날짜 칸이 잠깐 반짝임 */
     @keyframes flash {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 219, 0); transform: scale(1); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 122, 89, 0); transform: scale(1); }
       25%, 75% { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.08); }
-      50% { box-shadow: 0 0 0 3px rgba(167, 139, 219, 0.3); transform: scale(1); }
+      50% { box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.3); transform: scale(1); }
     }
     .cell.flash { animation: flash 0.9s ease; position: relative; z-index: 1; }
 
@@ -431,7 +446,7 @@
     .cell.allok .num { box-shadow: 0 0 0 2px var(--ok); }
 
     /* 오늘: 보라색으로 채운 숫자 */
-    .cell.today .num { background: var(--accent-soft); color: var(--accent-deep); font-weight: 800; }
+    .cell.today .num { background: var(--accent-soft); color: var(--accent-text); font-weight: 800; }
 
     /* 확정된 날: 진한 보라색으로 꽉 찬 동그라미 + 📌, 다른 표시보다 눈에 띄게 */
     .cell.confirmed { position: relative; box-shadow: inset 0 0 0 2px var(--accent-deep); }
@@ -441,7 +456,7 @@
       background: var(--accent-deep);
       color: #fff;
       font-weight: 800;
-      box-shadow: 0 2px 6px rgba(124, 92, 196, 0.45);
+      box-shadow: 0 2px 6px rgba(255, 122, 89, 0.45);
     }
     .cell .pin { position: absolute; top: 1px; right: 2px; font-size: 10px; line-height: 1; }
 
@@ -495,7 +510,7 @@
       margin-top: auto;
       font-size: 10px;
       font-weight: 700;
-      color: #a33d4b;
+      color: var(--no-text);
     }
 
     .legend {
@@ -507,7 +522,7 @@
       color: var(--muted);
     }
     .legend span { display: flex; align-items: center; gap: 5px; }
-    .lg-today { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-soft); box-shadow: inset 0 0 0 1px #d6c9ef; }
+    .lg-today { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-soft); box-shadow: inset 0 0 0 1px #ffc9b8; }
     .lg-confirm { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-deep); }
     .lg-ok { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--ok); }
 
@@ -523,7 +538,7 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(40, 30, 60, 0.35);
+      background: rgba(58, 42, 31, 0.35);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s;
@@ -613,7 +628,7 @@
       aspect-ratio: 1;
       border: 2px solid transparent;
       border-radius: 14px;
-      background: #faf8fd;
+      background: #fffaf3;
       font-size: 26px;
       cursor: pointer;
     }
@@ -628,7 +643,7 @@
       flex-shrink: 0;
       border: 1.5px solid var(--line);
       border-radius: 12px;
-      background: #fcfbfe;
+      background: #fffcf7;
       font-size: 22px;
       cursor: pointer;
     }
@@ -642,14 +657,15 @@
       font-family: inherit;
       font-size: 16px;
       color: var(--text);
-      background: #fcfbfe;
+      background: #fffcf7;
       outline: none;
     }
     .add-row input:focus { border-color: var(--accent); }
     .save-btn {
       height: 46px;
       padding: 0 16px;
-      border: none;
+      border: var(--sticker-border);
+      box-shadow: var(--sticker-shadow);
       border-radius: 12px;
       background: var(--accent);
       color: #fff !important;
@@ -670,9 +686,9 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .btn.ghost { background: #f1eef6; }
+    .btn.ghost { background: #f6ebde; }
     .btn.danger { background: var(--sun); color: #fff; }
-    .btn.primary { background: var(--accent-deep); color: #fff; }
+    .btn.primary { background: var(--accent); color: #fff; border: var(--sticker-border); box-shadow: var(--sticker-shadow); }
     .sheet-actions { margin-top: 18px; }
 
     /* 확정 배너 (추천 줄 자리) */
@@ -682,6 +698,8 @@
       border-radius: 14px;
       background: var(--accent-deep);
       color: #fff;
+      border: var(--sticker-border);
+      box-shadow: var(--sticker-shadow);
     }
     .banner[hidden] { display: none; }
     .banner-main { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
@@ -699,7 +717,7 @@
       border: none;
       border-radius: 9px;
       background: #fff;
-      color: var(--accent-deep) !important;
+      color: var(--accent-text) !important;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -713,7 +731,7 @@
       font-size: 13px;
       font-weight: 600;
     }
-    .banner.past { background: #f1eef6; color: var(--muted); }
+    .banner.past { background: #f6ebde; color: var(--muted); border-color: var(--line); box-shadow: none; }
     .banner.past .banner-main { font-size: 14px; }
     .btn.full { width: 100%; flex: none; }
 
@@ -723,7 +741,7 @@
       left: 50%;
       top: 70px;                     /* 실제 위치는 toast()에서 상단 버튼 줄 바로 아래로 */
       transform: translate(-50%, -10px);
-      background: rgba(50, 42, 70, 0.92);
+      background: rgba(58, 42, 31, 0.92);
       color: #fff;
       font-size: 14px;
       font-weight: 600;
@@ -749,11 +767,11 @@
       transform: translateY(-50%);
       height: 34px;
       padding: 0 12px;
-      border: none;
       border-radius: 17px;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(120, 100, 160, 0.12);
-      color: var(--accent-deep) !important;
+      background: var(--accent);
+      border: var(--sticker-border);
+      box-shadow: var(--sticker-shadow);
+      color: #fff !important;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
@@ -762,7 +780,7 @@
     .link-btn.quiet {
       background: transparent;
       box-shadow: none;
-      border: 1.5px solid #d8cfe8;
+      border: 1.5px solid #d9c6b2;
       color: var(--muted) !important;
     }
 
@@ -863,7 +881,7 @@
       cursor: pointer;
     }
     .room-title-row[hidden] { display: none; }
-    .room-title .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .room-title .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "Jua", "Pretendard", sans-serif; font-weight: 400; font-size: 25px; }
     .room-title .pen { flex: none; font-size: 14px; opacity: 0.55; }
 
     /* 내 모임 목록: 이름 + 정보, 오른쪽 ⋯ */
@@ -2528,7 +2546,8 @@
         if (people.length > 0) {
           // 전체 인원 중 안 되는 사람 비율이 높을수록 배경을 진하게
           const ratio = Math.min(1, people.length / state.size);
-          cell.style.background = `rgba(var(--no-rgb), ${(0.08 + 0.4 * ratio).toFixed(2)})`;
+          // 연한 주황 #ffe6cc(255,230,204) → 진한 주황 #ffc999(255,201,153)
+          cell.style.background = `rgb(255, ${Math.round(230 - 29 * ratio)}, ${Math.round(204 - 51 * ratio)})`;
 
           const faces = h('div', 'faces');
           for (const p of people.slice(0, MAX_FACES)) {
