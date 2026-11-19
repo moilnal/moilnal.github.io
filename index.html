@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>모일날</title>
   <meta name="description" content="안 되는 날만 콕! 모두 되는 날을 찾아드려요">
 
@@ -54,7 +54,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 24px 16px 40px;
+      padding: 24px 16px calc(96px + env(safe-area-inset-bottom)); /* 아래: 탭 바 높이만큼 */
     }
 
     button { font-family: inherit; color: inherit; }
@@ -923,6 +923,98 @@
       color: var(--text);
       resize: none;
     }
+
+    /* ---------- 단계: 날짜 / 장소 / 정산 (body data-tab) ---------- */
+    body:not([data-tab="date"]) .date-only,
+    body:not([data-tab="date"]) .hint.editing,
+    body:not([data-tab="place"]) .place-only,
+    body:not([data-tab="settle"]) .settle-only { display: none !important; }
+
+    /* 날짜 확정 뒤 "📍 장소도 정할까요? →" */
+    .place-nudge {
+      display: block;
+      width: 100%;
+      height: 34px;
+      margin-top: 8px;
+      border: 1.5px dashed #d9c6b2;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--accent-text) !important;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .place-nudge[hidden] { display: none; }
+
+    /* 장소·정산: 곧 열려요 */
+    .soon { padding: 28px 20px 20px; text-align: center; }
+    .soon-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .soon-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; word-break: keep-all; }
+
+    /* 하단 탭 바: 동그라미 3개를 선으로 이은 타임라인 */
+    .tabbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top: 1.5px solid var(--ink);
+      padding-bottom: env(safe-area-inset-bottom);
+      transition: transform 0.25s ease;
+      z-index: 5;                     /* 하단 시트(overlay 10)가 덮음 */
+    }
+    .tabbar[hidden] { display: none; }
+    .tabbar.away { transform: translateY(100%); }
+    .tabbar-in {
+      display: flex;
+      align-items: flex-start;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 8px 8px 8px;
+    }
+    .step {
+      flex: 0 0 96px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .step .dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #fff;
+      font-weight: 800;
+    }
+    .step b { font-size: 13px; font-weight: 700; margin-top: 2px; }
+    .step small {
+      max-width: 100%;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .step.done .dot { background: var(--ok); border-color: var(--ok); }
+    .step.done small { color: var(--ok-text); font-weight: 600; }
+    .step.cur .dot { background: var(--accent); border-color: var(--accent); }
+    .step.cur b, .step.cur small { color: var(--accent-text); }
+    .tabbar .link {
+      flex: 1;
+      margin-top: 14px;               /* 동그라미 가운데 높이 */
+      border-top: 2px dashed #d9c6b2;
+    }
+    .tabbar .link.solid { border-top-style: solid; border-color: var(--ok); }
   </style>
 </head>
 <body>
@@ -964,15 +1056,16 @@
         </div>
         <div id="chips" class="chips"></div>
         <div id="hint" class="hint"></div>
-        <div id="banner" class="banner" hidden></div>
-        <div id="rec" class="rec" hidden>
+        <div id="banner" class="banner date-only" hidden></div>
+        <button id="placeNudge" class="place-nudge date-only" hidden>📍 장소도 정할까요? →</button>
+        <div id="rec" class="rec date-only" hidden>
           <div class="rec-label"><span id="recTitle">✨ 후보</span><small id="recPending">(응답 중)</small></div>
           <div id="recTop" class="rec-top" hidden></div>
           <div id="recChips" class="rec-chips"></div>
         </div>
       </section>
 
-      <section class="card calendar">
+      <section class="card calendar date-only">
         <div class="month-nav">
           <button id="prev" aria-label="이전 달">‹</button>
           <div id="title"></div>
@@ -996,8 +1089,33 @@
           이름을 고른 뒤 누르면 내 안 되는 날로 표시돼요
         </p>
       </section>
+
+      <!-- 장소 단계: 곧 열려요 -->
+      <section class="card soon place-only">
+        <h2 class="soon-title">📍 어디서 볼까요?</h2>
+        <p class="soon-desc">모두의 출발역 기준으로 공평한 지역을 추천하고, 식당까지 함께 정할 수 있게 준비 중이에요</p>
+        <button class="btn ghost full back-date">📅 날짜로 돌아가기</button>
+      </section>
+
+      <!-- 정산 단계: 곧 열려요 -->
+      <section class="card soon settle-only">
+        <h2 class="soon-title">💸 얼마씩 내면 될까요?</h2>
+        <p class="soon-desc">누가 얼마 냈는지 적으면 송금할 금액을 알아서 계산해 주는 기능을 준비 중이에요</p>
+        <button class="btn ghost full back-date">📅 날짜로 돌아가기</button>
+      </section>
     </div>
   </div>
+
+  <!-- 하단 탭 바: 날짜 → 장소 → 정산 타임라인 -->
+  <nav id="tabbar" class="tabbar" hidden>
+    <div class="tabbar-in">
+      <button class="step" data-tab="date"><span class="dot"></span><b>날짜</b><small></small></button>
+      <i class="link"></i>
+      <button class="step" data-tab="place"><span class="dot"></span><b>장소</b><small></small></button>
+      <i class="link"></i>
+      <button class="step" data-tab="settle"><span class="dot"></span><b>정산</b><small></small></button>
+    </div>
+  </nav>
 
   <div id="overlay" class="overlay">
     <div class="sheet">
@@ -1083,6 +1201,12 @@
     let newEmoji = null;   // 빈자리를 채울 때 자동으로 들어갈 이모지
     let changing = false;  // 확정 배너의 [변경]을 누른 상태
     let draft = false;     // ?new 로 연 임시 모임 (첫 입력 때 서버에 만들어짐)
+
+    // 단계: 날짜 / 장소 / 정산. URL &tab= 으로 기억 (없으면 날짜)
+    const TABS = ['date', 'place', 'settle'];
+    let tab = new URLSearchParams(location.search).get('tab');
+    if (!TABS.includes(tab)) tab = 'date';
+    document.body.dataset.tab = tab;
     let creating = null;   // create_room 진행 중인 Promise (두 번 만들지 않게)
 
     const today = new Date();
@@ -1216,7 +1340,7 @@
         creating = callRpc('create_room', {}).then(id => {
           roomId = id;
           draft = false;
-          try { history.replaceState(null, '', location.pathname + '?g=' + encodeURIComponent(id)); } catch (e) {}
+          try { history.replaceState(null, '', location.pathname + '?g=' + encodeURIComponent(id) + tabQuery()); } catch (e) {}
           rememberRoom(true);
           subscribe();
         }).finally(() => { creating = null; });
@@ -1671,6 +1795,7 @@
     }
 
     function renderBanner() {
+      $('placeNudge').hidden = !activeConfirmed();   // 확정 뒤에만 "장소도 정할까요?"
       const banner = $('banner');
       banner.innerHTML = '';
       const c = state.confirmed;
@@ -1681,12 +1806,12 @@
 
       // 확정 날짜가 지났으면 "지난 모임"
       if (c.key < todayKey()) {
-        banner.className = 'banner past';
+        banner.className = 'banner past date-only';
         banner.append(h('div', 'banner-main', `지난 모임: ${confirmedLabel(c)}`));
         return;
       }
 
-      banner.className = 'banner';
+      banner.className = 'banner date-only';
       const main = h('div', 'banner-main');
       const diff = Math.round((date - today) / 86400000);
       main.append(
@@ -2572,6 +2697,47 @@
       renderUndoBar();
       renderPeople();
       renderCalendar();
+      renderTabbar();
+    }
+
+    // ===== 단계 이동 (하단 탭 바) =====
+    function tabQuery() {
+      return tab === 'date' ? '' : '&tab=' + tab;
+    }
+
+    function setTab(t) {
+      if (!TABS.includes(t)) return;
+      tab = t;
+      document.body.dataset.tab = t;
+      if (t !== 'date') state.selectedId = null;   // 날짜 입력 모드는 날짜 화면에서만
+      const p = new URLSearchParams(location.search);
+      if (t === 'date') p.delete('tab'); else p.set('tab', t);
+      const qs = p.toString().replace(/^new=(&|$)/, 'new$1');   // ?new 모양 유지
+      try { history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '')); } catch (e) {}
+      window.scrollTo(0, 0);
+      $('tabbar').classList.remove('away');
+      render();
+    }
+
+    // 날짜가 확정되면 ✓ + "12/20 (토) 7시", 보고 있는 단계는 코랄
+    function renderTabbar() {
+      const c = activeConfirmed();
+      const status = {
+        date: c ? shortLabel(keyToDate(c.key)) + (c.hour != null ? ` ${c.hour % 12 || 12}시` : '') : '고르는 중',
+        place: '아직',
+        settle: '모인 뒤'
+      };
+      const icons = { date: '📅', place: '📍', settle: '💸' };
+      for (const step of document.querySelectorAll('.tabbar .step')) {
+        const t = step.dataset.tab;
+        const done = t === 'date' && !!c;
+        step.classList.toggle('done', done);
+        step.classList.toggle('cur', t === tab);
+        step.querySelector('.dot').textContent = done ? '✓' : icons[t];
+        step.querySelector('small').textContent = status[t];
+      }
+      const links = document.querySelectorAll('.tabbar .link');
+      links[0].classList.toggle('solid', !!c);   // 끝난 날짜 → 장소 선은 청록 실선
     }
 
     // ===== 로딩 / 오류 화면 =====
@@ -2581,6 +2747,7 @@
       $('gearBtn').hidden = true;
       $('undoBar').hidden = true;
       $('roomTitleRow').hidden = true;
+      $('tabbar').hidden = true;
       const box = $('status');
       box.hidden = false;
       box.innerHTML = '';
@@ -2605,6 +2772,7 @@
       $('linkBtn').hidden = false;
       $('gearBtn').hidden = false;
       $('roomTitleRow').hidden = false;
+      $('tabbar').hidden = false;
     }
 
     function renderTitle() {
@@ -2658,7 +2826,7 @@
         if (!id) {
           // 링크 없이 열면: 최근 모임 → 없으면 새 모임
           id = local.rooms.length ? local.rooms[0].id : await callRpc('create_room', {});
-          const url = location.pathname + '?g=' + encodeURIComponent(id);
+          const url = location.pathname + '?g=' + encodeURIComponent(id) + tabQuery();
           try { history.replaceState(null, '', url); }
           catch (e) { location.replace(url); return; }
         }
@@ -2710,6 +2878,26 @@
     $('linkBtn').addEventListener('click', inviteMembers);
     $('roomTitle').addEventListener('click', () => openRename(roomId, state.name));
     $('undoBtn').addEventListener('click', undoReset);
+
+    // 단계 이동
+    for (const step of document.querySelectorAll('.tabbar .step')) {
+      step.addEventListener('click', () => setTab(step.dataset.tab));
+    }
+    for (const b of document.querySelectorAll('.back-date')) {
+      b.addEventListener('click', () => setTab('date'));
+    }
+    $('placeNudge').addEventListener('click', () => setTab('place'));
+
+    // 탭 바: 아래로 스크롤하면 숨고, 위로 스크롤하면 다시 보임
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      const bar = $('tabbar');
+      if (y > lastScrollY + 6 && y > 40) bar.classList.add('away');
+      else if (y < lastScrollY - 6) bar.classList.remove('away');
+      else return;
+      lastScrollY = y;
+    }, { passive: true });
 
     $('prev').addEventListener('click', () => {
       current.setMonth(current.getMonth() - 1);
