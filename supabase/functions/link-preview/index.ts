@@ -205,6 +205,12 @@ function cleanTitle(raw: string): string {
   return [...t].slice(0, TITLE_MAX).join('');
 }
 
+// 지도 서비스 공용 이미지(가게 사진이 아님)는 사진 없음으로 (화면의 GENERIC_IMAGES 와 같게 유지)
+const GENERIC_IMAGES = [
+  'https://ssl.pstatic.net/static/maps/assets/images/og-map-',
+  'https://t1.kakaocdn.net/localimg/localimages/07/common/ogtag',
+];
+
 function cleanImage(raw: string | undefined, base: string): string | null {
   if (!raw) return null;
   let v = raw.trim();
@@ -212,6 +218,7 @@ function cleanImage(raw: string | undefined, base: string): string | null {
   try {
     const u = new URL(v, base);
     if (u.protocol !== 'https:') return null;
+    if (GENERIC_IMAGES.some(p => u.href.startsWith(p))) return null;
     return u.href.length <= 2000 ? u.href : null;
   } catch {
     return null;
