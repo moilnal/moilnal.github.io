@@ -163,6 +163,15 @@
     }
     .chip.sel .emo { background: #fff; }
     .chip.empty .emo { background: none; font-size: 15px; }
+    /* 이 기기의 "나"가 없을 때 첫 빈자리: 강조색으로 채운 "＋ 내 이름 넣기" */
+    .chip.empty.first {
+      border-style: solid;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+    .chip.empty.first .emo { font-size: 17px; font-weight: 800; }
 
     /* 칩의 이름 부분: 탭하면 입력 모드 */
     .chip .nm { padding-left: 7px; line-height: 34px; }
@@ -712,8 +721,8 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: 36px;
-      transform: translate(-50%, 20px);
+      top: 70px;                     /* 실제 위치는 toast()에서 상단 버튼 줄 바로 아래로 */
+      transform: translate(-50%, -10px);
       background: rgba(50, 42, 70, 0.92);
       color: #fff;
       font-size: 14px;
@@ -748,6 +757,13 @@
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
+    }
+    /* 이 기기의 "나"가 아직 없을 때: 테두리만 있는 보조 버튼 */
+    .link-btn.quiet {
+      background: transparent;
+      box-shadow: none;
+      border: 1.5px solid #d8cfe8;
+      color: var(--muted) !important;
     }
 
     /* 저장 중일 때 화면 맨 위 얇은 진행 표시 */
@@ -1094,6 +1110,9 @@
     function toast(msg) {
       const t = $('toast');
       t.textContent = msg;
+      // 위치: 상단 버튼 줄 바로 아래 (스크롤해서 안 보이면 화면 맨 위)
+      const headerBottom = document.querySelector('.top').getBoundingClientRect().bottom;
+      t.style.top = `${Math.max(12, headerBottom + 6)}px`;
       t.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
@@ -1568,9 +1587,15 @@
         chips.append(chip);
       }
 
+      // 이 기기의 "나"가 아직 없으면: 첫 빈자리 강조 + 멤버 초대는 보조 버튼으로
+      const noMe = !findPerson(local.me[roomId]);
+      $('linkBtn').classList.toggle('quiet', noMe);
+
       for (let i = 0; i < emptySlots(); i++) {
-        const chip = h('div', 'chip empty');
-        chip.append(h('span', 'emo', '❔'), h('span', 'nm', '빈자리'));
+        const first = noMe && i === 0;
+        const chip = h('div', first ? 'chip empty first' : 'chip empty');
+        if (first) chip.append(h('span', 'emo', '＋'), h('span', 'nm', '내 이름 넣기'));
+        else chip.append(h('span', 'emo', '❔'), h('span', 'nm', '빈자리'));
         chip.addEventListener('click', openFillSlot);
         chips.append(chip);
       }
