@@ -1015,6 +1015,158 @@
       border-top: 2px dashed #d9c6b2;
     }
     .tabbar .link.solid { border-top-style: solid; border-color: var(--ok); }
+
+    /* ---------- 장소 단계 ---------- */
+    .place { padding: 16px 14px; }
+    .place-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .place-title { font-size: 18px; font-weight: 700; }
+    .add-place-btn {
+      flex: none;
+      height: 34px;
+      padding: 0 12px;
+      border: var(--ink-border);
+      border-radius: 17px;
+      background: var(--accent);
+      color: #fff !important;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .add-place-btn[hidden] { display: none; }
+    .place-banner .banner { cursor: pointer; }
+    .place-banner[hidden], .place #placeHint[hidden] { display: none; }
+
+    .place-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .place-list:empty { display: none; }
+    .place-card {
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      cursor: pointer;
+    }
+    .place-card.top { border-color: var(--accent); }
+    .place-card.picked { border-color: var(--accent); background: var(--accent-soft); }
+    .place-photo { aspect-ratio: 16 / 9; background: #fbf3ea; }
+    .place-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .place-body { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+    .place-info { flex: 1; min-width: 0; }
+    .place-name { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .place-sub { margin-top: 2px; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .place-heart {
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 52px;
+      padding: 6px 8px;
+      border: 1.5px solid #ffc9b8;
+      border-radius: 14px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .place-heart.on { background: var(--accent-soft); border-color: var(--accent); }
+    .place-heart .who { font-size: 12px; letter-spacing: -1px; min-height: 14px; }
+
+    .place-empty { margin-top: 14px; text-align: center; }
+    .place-empty[hidden] { display: none; }
+    .place-empty p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; word-break: keep-all; }
+    .place-empty .btn { flex: none; padding: 0 20px; }
+    .decided-btn {
+      display: block;
+      margin: 12px auto 0;
+      border: none;
+      background: none;
+      color: var(--muted) !important;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    .decided-btn[hidden] { display: none; }
+
+    /* 링크 추가 시트 */
+    .link-input {
+      width: 100%;
+      min-height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--text);
+      background: #fffcf7;
+      outline: none;
+      resize: none;
+    }
+    .link-input:focus { border-color: var(--accent); }
+    .link-state { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 18px; }
+    .link-state.warn { color: var(--no-text); font-weight: 600; }
+    .link-preview { margin-top: 10px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .link-preview .place-name { padding: 10px 12px; }
+    .name-input { margin-top: 10px; }
+    .name-input input {
+      width: 100%;
+      height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 16px;
+      color: var(--text);
+      background: #fffcf7;
+      outline: none;
+    }
+    .name-input input:focus { border-color: var(--accent); }
+    .name-input label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* 장소 상세 시트 */
+    .detail-photo { margin: 0 -20px 14px; aspect-ratio: 16 / 9; background: #fbf3ea; }
+    .detail-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .title-row { display: flex; align-items: center; gap: 8px; }
+    .title-row .sheet-title { margin-bottom: 0; min-width: 0; overflow-wrap: anywhere; }
+    .small-btn {
+      flex: none;
+      height: 28px;
+      padding: 0 10px;
+      border: 1.5px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--muted) !important;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .map-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      margin: 12px 0;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .voters { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .voters b { color: var(--text); }
+    .text-danger {
+      display: block;
+      margin: 14px auto 0;
+      border: none;
+      background: none;
+      color: var(--sun) !important;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -1090,11 +1242,20 @@
         </p>
       </section>
 
-      <!-- 장소 단계: 곧 열려요 -->
-      <section class="card soon place-only">
-        <h2 class="soon-title">📍 어디서 볼까요?</h2>
-        <p class="soon-desc">모두의 출발역 기준으로 공평한 지역을 추천하고, 식당까지 함께 정할 수 있게 준비 중이에요</p>
-        <button class="btn ghost full back-date">📅 날짜로 돌아가기</button>
+      <!-- 장소 단계: 지도 링크 후보 + ❤️ 투표 + 확정 -->
+      <section class="card place place-only">
+        <div class="place-head">
+          <h2 class="place-title">📍 어디서 볼까요?</h2>
+          <button id="addPlaceBtn" class="add-place-btn">＋ 링크 추가</button>
+        </div>
+        <div id="placeBanner" class="place-banner" hidden></div>
+        <div id="placeHint" class="hint" hidden></div>
+        <div id="placeList" class="place-list"></div>
+        <div id="placeEmpty" class="place-empty" hidden>
+          <p>네이버지도·카카오맵 링크를 붙여넣어 후보를 올려보세요</p>
+          <button id="addPlaceBtn2" class="btn primary">＋ 링크 추가</button>
+        </div>
+        <button id="decidedBtn" class="decided-btn">이미 정했어요 →</button>
       </section>
 
       <!-- 정산 단계: 곧 열려요 -->
@@ -1161,7 +1322,12 @@
       room_deleted: '삭제된 모임이에요',
       restore_expired: '삭제한 지 24시간이 지나서 복구할 수 없어요',
       invalid_room_name: '모임 이름은 1~20자로 써주세요',
-      invalid_hours: '고를 수 없는 시간이에요'
+      invalid_hours: '고를 수 없는 시간이에요',
+      invalid_url: 'https:// 로 시작하는 링크만 올릴 수 있어요',
+      invalid_place_title: '장소 이름은 1~40자로 써주세요',
+      place_exists: '이미 올라온 곳이에요',
+      too_many_places: '후보는 10개까지 올릴 수 있어요',
+      place_not_found: '후보를 찾을 수 없어요'
     };
     const DEFAULT_ROOM_NAME = '새 모임';
     const FLASH_KEY = 'moilnal-flash';   // 다른 모임으로 이동한 뒤 보여줄 안내 (sessionStorage)
@@ -1195,6 +1361,8 @@
       marks: {},            // { '2026-11-12': [참여자 id, ...] }
       votes: {},            // ❤️ 투표 + 가능 시간 { '2026-12-06': [{ id, s: 19, e: 24 }, ...] }
       confirmed: null,      // { key: '2026-11-07', known: [id, ...], hour: 19 | null }
+      places: [],           // 장소 후보 [{ id, url, title, image, by, votes: [참여자 id, ...] }]
+      placeId: null,        // 확정 장소 id
       undoUntil: null,      // 초기화 되돌리기 가능한 시각
       selectedId: null      // 지금 입력 중인 사람 (null이면 보기 모드)
     };
@@ -1308,7 +1476,8 @@
       writeSeq++;
       const backup = JSON.stringify({
         name: state.name, size: state.size, participants: state.participants,
-        marks: state.marks, votes: state.votes, confirmed: state.confirmed, undoUntil: state.undoUntil
+        marks: state.marks, votes: state.votes, confirmed: state.confirmed, undoUntil: state.undoUntil,
+        places: state.places, placeId: state.placeId
       });
       if (optimistic) { optimistic(); render(); }
 
@@ -1399,6 +1568,8 @@
       }));
       state.marks = data.unavailable || {};
       state.votes = data.votes || {};
+      state.places = data.places || [];
+      state.placeId = data.confirmed_place || null;
       state.confirmed = data.confirmed
         ? { key: data.confirmed.date, known: data.confirmed.known || [], hour: data.confirmed.hour ?? null }
         : null;
@@ -1862,7 +2033,10 @@
       return `${name} 📌`;
     }
     function calDetails() {
-      return `모일날에서 정한 약속이에요\n${roomLink()}`;
+      // 확정 장소가 있으면 장소 이름 + 지도 링크도
+      const place = confirmedPlace();
+      const where = place ? `📍 ${place.title}\n${safeHttps(place.url) || ''}\n` : '';
+      return `모일날에서 정한 약속이에요\n${where}${roomLink()}`;
     }
 
     function openCalendarSheet(key) {
@@ -1884,7 +2058,8 @@
         action: 'TEMPLATE',
         text: calTitle(),
         dates: `${start}/${end}`,
-        details: calDetails()
+        details: calDetails(),
+        location: confirmedPlace() ? confirmedPlace().title : ''
       });
       window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank');
     }
@@ -1930,6 +2105,7 @@
         timed ? `DTEND:${end}` : `DTEND;VALUE=DATE:${end}`,
         `SUMMARY:${icsText(calTitle())}`,
         `DESCRIPTION:${icsText(calDetails())}`,
+        ...(confirmedPlace() ? [`LOCATION:${icsText(confirmedPlace().title)}`] : []),
         `URL:${roomLink()}`,
         'END:VEVENT',
         'END:VCALENDAR'
@@ -2349,6 +2525,8 @@
                 state.participants = [];
                 state.marks = {};
                 state.votes = {};
+                state.places = [];
+                state.placeId = null;
                 state.confirmed = null;
                 state.selectedId = null;
                 state.undoUntil = new Date(Date.now() + 86400000);
@@ -2697,6 +2875,7 @@
       renderUndoBar();
       renderPeople();
       renderCalendar();
+      renderPlaces();
       renderTabbar();
     }
 
@@ -2724,20 +2903,364 @@
       const c = activeConfirmed();
       const status = {
         date: c ? shortLabel(keyToDate(c.key)) + (c.hour != null ? ` ${c.hour % 12 || 12}시` : '') : '고르는 중',
-        place: '아직',
+        place: confirmedPlace() ? confirmedPlace().title : '아직',
         settle: '모인 뒤'
       };
+      const finished = { date: !!c, place: !!confirmedPlace(), settle: false };
       const icons = { date: '📅', place: '📍', settle: '💸' };
       for (const step of document.querySelectorAll('.tabbar .step')) {
         const t = step.dataset.tab;
-        const done = t === 'date' && !!c;
+        const done = finished[t];
         step.classList.toggle('done', done);
         step.classList.toggle('cur', t === tab);
         step.querySelector('.dot').textContent = done ? '✓' : icons[t];
         step.querySelector('small').textContent = status[t];
       }
       const links = document.querySelectorAll('.tabbar .link');
-      links[0].classList.toggle('solid', !!c);   // 끝난 날짜 → 장소 선은 청록 실선
+      links[0].classList.toggle('solid', finished.date);    // 끝난 단계 → 다음 단계 선은 청록 실선
+      links[1].classList.toggle('solid', finished.place);
+    }
+
+    // ===== 장소 단계: 지도 링크 후보 + ❤️ 투표 + 확정 =====
+    // 미리보기를 읽을 수 있는 지도 링크 (Edge Function link-preview 의 허용 목록과 같음)
+    const PREVIEW_HOSTS = [
+      'naver.me', 'map.naver.com', 'm.map.naver.com', 'm.place.naver.com', 'pcmap.place.naver.com',
+      'kko.to', 'map.kakao.com', 'place.map.kakao.com', 'applink.map.kakao.com'
+    ];
+    const MAX_PLACES = 10;
+    let placeChanging = false;   // 확정 배너의 [변경]을 누른 상태
+    let previewSeq = 0;          // 늦게 도착한 미리보기 결과 버리기용
+
+    // 이 기기의 "나" (실제 참여자일 때만)
+    function myId() {
+      const p = findPerson(local.me[roomId]);
+      return p ? p.id : null;
+    }
+    function findPlace(id) {
+      return state.places.find(p => p.id === id);
+    }
+    function confirmedPlace() {
+      return (state.placeId && findPlace(state.placeId)) || null;
+    }
+    // https 링크만 (아니면 null)
+    function safeHttps(url) {
+      try {
+        const u = new URL(url);
+        return u.protocol === 'https:' ? u.href : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    function hostOf(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+    }
+    // ❤️ 최다 후보 (동점이면 먼저 추가된 것, ❤️ 0개면 없음)
+    function topPlaceId() {
+      let best = null;
+      for (const p of state.places) {
+        if (p.votes.length && (!best || p.votes.length > best.votes.length)) best = p;
+      }
+      return best ? best.id : null;
+    }
+
+    // 가게 사진 (16:9). 못 불러오면 사진 영역을 없앰
+    function placePhoto(url, className) {
+      const src = url && safeHttps(url);
+      if (!src) return null;
+      const box = h('div', className);
+      const img = document.createElement('img');
+      img.referrerPolicy = 'no-referrer';
+      img.alt = '';
+      img.addEventListener('error', () => box.remove());
+      img.src = src;
+      box.append(img);
+      return box;
+    }
+
+    function renderPlaces() {
+      const picked = confirmedPlace();
+      if (!picked) placeChanging = false;
+      const showList = !picked || placeChanging;
+
+      // 확정 배너: "📍 장소 이름" + [변경]
+      const banner = $('placeBanner');
+      banner.innerHTML = '';
+      banner.hidden = !picked;
+      if (picked) {
+        const b = h('div', 'banner');
+        const main = h('div', 'banner-main');
+        const title = h('span', 'banner-title', `📍 ${picked.title}`);
+        title.addEventListener('click', () => showPlaceDetail(picked.id));
+        const change = h('button', 'banner-btn', placeChanging ? '닫기' : '변경');
+        change.addEventListener('click', () => { placeChanging = !placeChanging; renderPlaces(); });
+        main.append(title, change);
+        b.append(main);
+        banner.append(b);
+      }
+      const hint = $('placeHint');
+      hint.hidden = !(picked && placeChanging);
+      hint.textContent = '다른 곳을 골라 다시 확정하세요';
+
+      const empty = state.places.length === 0;
+      $('addPlaceBtn').hidden = empty && showList;
+      $('placeEmpty').hidden = !(empty && showList);
+      $('decidedBtn').hidden = !showList;
+
+      const list = $('placeList');
+      list.innerHTML = '';
+      if (!showList) return;
+
+      const me = myId();
+      const top = topPlaceId();
+      for (const p of state.places) {
+        let cls = 'place-card';
+        if (p.id === top) cls += ' top';
+        if (p.id === state.placeId) cls += ' picked';
+        const card = h('div', cls);
+        const photo = placePhoto(p.image, 'place-photo');
+        if (photo) card.append(photo);
+
+        const body = h('div', 'place-body');
+        const info = h('div', 'place-info');
+        info.append(h('div', 'place-name', (p.id === top ? '👑 ' : '') + p.title));
+        const adder = findPerson(p.by);
+        info.append(h('div', 'place-sub', hostOf(p.url) + (adder ? ` · ${adder.emoji} 추가` : '')));
+
+        const mine = !!me && p.votes.includes(me);
+        const heart = h('button', 'place-heart' + (mine ? ' on' : ''));
+        heart.setAttribute('aria-label', '좋아요');
+        heart.append(
+          h('span', '', `${mine ? '❤️' : '🤍'} ${p.votes.length}`),
+          h('span', 'who', p.votes.slice(0, 3).map(id => (findPerson(id) || {}).emoji || '').join(''))
+        );
+        heart.addEventListener('click', e => { e.stopPropagation(); togglePlaceVote(p.id); });
+
+        body.append(info, heart);
+        card.append(body);
+        card.addEventListener('click', () => showPlaceDetail(p.id));
+        list.append(card);
+      }
+    }
+
+    function togglePlaceVote(id) {
+      const me = myId();
+      if (!me) return toast('먼저 위에서 내 이름을 골라주세요');
+      write('toggle_place_vote', { p_member_id: me, p_place_id: id }, () => {
+        const p = findPlace(id);
+        if (!p) return;
+        const i = p.votes.indexOf(me);
+        if (i >= 0) p.votes.splice(i, 1);
+        else p.votes.push(me);
+      });
+    }
+
+    async function confirmPlace(id) {
+      const res = await write('confirm_place', { p_place_id: id }, () => {
+        state.placeId = id;
+        placeChanging = false;
+      });
+      if (res.ok) toast(id ? '📍 장소를 확정했어요' : '장소 확정을 취소했어요');
+    }
+
+    // 후보 올리기. decided = "이미 정했어요"로 열었으면 올리면서 바로 확정
+    async function addPlace(url, title, image, decided) {
+      const me = myId();
+      const tempId = 'tmp-' + Date.now();
+      const res = await write('add_place', { p_member_id: me, p_url: url, p_title: title, p_image: image }, () => {
+        state.places.push({ id: tempId, url, title, image, by: me, votes: [] });
+      });
+      if (!res.ok) return;
+      const p = findPlace(tempId);
+      if (p) p.id = res.data;
+      if (decided) return confirmPlace(res.data);
+      toast('후보로 올렸어요');
+    }
+
+    // 미리보기 요청 (Edge Function, 8초 안에 답이 없으면 실패로)
+    async function fetchPreview(url) {
+      if (!db) throw new Error('network');
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
+      const { data, error } = await Promise.race([
+        db.functions.invoke('link-preview', { body: { url } }),
+        timeout
+      ]);
+      if (error || !data) throw error || new Error('empty');
+      return data;
+    }
+
+    // 붙여넣은 글에서 https:// 링크 하나 (여러 줄이면 링크가 있는 줄만)
+    function pickLink(text) {
+      for (const line of text.split(/\r?\n/)) {
+        const m = line.match(/https:\/\/\S+/);
+        if (m) return m[0];
+      }
+      return null;
+    }
+
+    function openAddPlace(decided) {
+      if (state.places.length >= MAX_PLACES) return toast(`후보는 ${MAX_PLACES}개까지 올릴 수 있어요`);
+      let input;
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', decided ? '어디로 정했어요?' : '📍 후보 올리기'));
+
+        input = document.createElement('textarea');
+        input.className = 'link-input';
+        input.rows = 2;
+        input.placeholder = '지도 링크를 붙여넣어 주세요';
+        const status = h('div', 'link-state');
+        const previewBox = h('div');
+        const nameWrap = h('div', 'name-input');
+        const nameInput = document.createElement('input');
+        nameInput.maxLength = 40;
+        nameWrap.append(h('label', '', '이름을 알려주세요'), nameInput);
+        nameWrap.hidden = true;
+        const submit = h('button', 'btn primary full sheet-actions', '후보로 올리기');
+
+        let link = null, preview = null, loading = false;
+        const typedName = () => nameInput.value.trim().replace(/\s+/g, ' ');
+        const update = () => {
+          submit.disabled = !link || loading || !((preview && preview.title) || typedName());
+        };
+        const warn = msg => { status.className = 'link-state warn'; status.textContent = msg; };
+
+        const handle = async () => {
+          const seq = ++previewSeq;
+          link = null; preview = null; loading = false;
+          previewBox.innerHTML = '';
+          nameWrap.hidden = true;
+          status.className = 'link-state';
+          status.textContent = '';
+
+          const text = input.value.trim();
+          const url = text ? pickLink(text) : null;
+          if (!url) {
+            if (/http:\/\//i.test(text)) warn('https:// 로 시작하는 링크만 올릴 수 있어요');
+            return update();
+          }
+          if (url.length > 2000 || !safeHttps(url)) { warn('링크를 확인해주세요'); return update(); }
+          if (state.places.some(p => p.url === url)) { warn('이미 올라온 곳이에요'); return update(); }
+          link = url;
+
+          // 미리보기를 읽을 수 없는 링크는 이름만 받음
+          if (!PREVIEW_HOSTS.includes(hostOf(url))) {
+            nameWrap.hidden = false;
+            return update();
+          }
+
+          loading = true;
+          status.textContent = '미리보기를 불러오는 중…';
+          update();
+          let data = null;
+          try { data = await fetchPreview(url); } catch (e) {}
+          if (seq !== previewSeq) return;   // 그사이 다른 링크를 붙여넣음
+          loading = false;
+          status.textContent = '';
+
+          const title = data && typeof data.title === 'string' ? [...data.title.trim()].slice(0, 40).join('') : '';
+          const image = data && typeof data.image === 'string' ? safeHttps(data.image) : null;
+          preview = { title, image };
+          if (title) {
+            const card = h('div', 'link-preview');
+            const photo = placePhoto(image, 'place-photo');
+            if (photo) card.append(photo);
+            card.append(h('div', 'place-name', title));
+            previewBox.append(card);
+          } else {
+            if (!data) status.textContent = '미리보기를 불러오지 못했어요';
+            nameWrap.hidden = false;
+          }
+          update();
+        };
+
+        input.addEventListener('input', handle);
+        nameInput.addEventListener('input', update);
+        nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submit.click(); });
+        submit.addEventListener('click', () => {
+          if (submit.disabled) return;
+          const title = (preview && preview.title) || typedName();
+          const image = (preview && preview.image) || null;
+          closeSheet();
+          addPlace(link, title, image, decided);
+        });
+
+        body.append(input, status, previewBox, nameWrap, submit);
+        update();
+      }, 'top');
+      input.focus();
+    }
+
+    function showPlaceDetail(id) {
+      const p = findPlace(id);
+      if (!p) return;
+      openSheet(body => {
+        const photo = placePhoto(p.image, 'detail-photo');
+        if (photo) body.append(photo);
+
+        // 이름 + 작은 [이름 고치기]
+        const row = h('div', 'title-row');
+        const renameBtn = h('button', 'small-btn', '이름 고치기');
+        row.append(h('h3', 'sheet-title', p.title), renameBtn);
+        body.append(row);
+        renameBtn.addEventListener('click', () => {
+          const wrap = h('div', 'add-row');
+          const input = document.createElement('input');
+          input.maxLength = 40;
+          input.value = p.title;
+          const save = h('button', 'save-btn', '저장');
+          wrap.append(input, save);
+          row.replaceWith(wrap);
+          input.focus();
+          const go = async () => {
+            const name = input.value.trim().replace(/\s+/g, ' ');
+            if (!name) return toast('이름을 입력해주세요');
+            closeSheet();
+            const res = await write('rename_place', { p_place_id: id, p_title: name }, () => {
+              const q = findPlace(id);
+              if (q) q.title = name;
+            });
+            if (res.ok) toast('이름을 고쳤어요');
+          };
+          save.addEventListener('click', go);
+          input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+        });
+
+        const adder = findPerson(p.by);
+        body.append(h('p', 'sheet-desc', hostOf(p.url) + (adder ? ` · ${adder.emoji} ${adder.name} 님이 추가` : '')));
+
+        const href = safeHttps(p.url);
+        if (href) {
+          const a = h('a', 'map-link', '🔗 지도에서 보기');
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          body.append(a);
+        }
+
+        // 투표한 사람 전체
+        const voters = h('div', 'voters');
+        const names = p.votes.map(v => findPerson(v)).filter(Boolean).map(q => `${q.emoji} ${q.name}`);
+        if (names.length) voters.append(h('b', '', `❤️ ${names.length}명`), ` · ${names.join(', ')}`);
+        else voters.textContent = '아직 ❤️가 없어요';
+        body.append(voters);
+
+        const isPicked = state.placeId === id;
+        const main = h('button', isPicked ? 'btn ghost full sheet-actions' : 'btn primary full sheet-actions',
+          isPicked ? '확정 취소' : '📍 이 장소로 확정');
+        main.addEventListener('click', () => { closeSheet(); confirmPlace(isPicked ? null : id); });
+        body.append(main);
+
+        const del = h('button', 'text-danger', '후보 삭제');
+        del.addEventListener('click', () => {
+          confirmSheet('후보를 삭제할까요?', `"${p.title}" 후보와 ❤️가 함께 지워져요.`, '삭제', async () => {
+            const res = await write('delete_place', { p_place_id: id }, () => {
+              state.places = state.places.filter(q => q.id !== id);
+              if (state.placeId === id) state.placeId = null;
+            });
+            if (res.ok) toast('후보를 삭제했어요');
+          });
+        });
+        body.append(del);
+      });
     }
 
     // ===== 로딩 / 오류 화면 =====
@@ -2887,6 +3410,9 @@
       b.addEventListener('click', () => setTab('date'));
     }
     $('placeNudge').addEventListener('click', () => setTab('place'));
+    $('addPlaceBtn').addEventListener('click', () => openAddPlace(false));
+    $('addPlaceBtn2').addEventListener('click', () => openAddPlace(false));
+    $('decidedBtn').addEventListener('click', () => openAddPlace(true));
 
     // 탭 바: 아래로 스크롤하면 숨고, 위로 스크롤하면 다시 보임
     let lastScrollY = window.scrollY;

@@ -23,7 +23,7 @@
 
 **배포 주소:** https://moilnal.github.io/
 
-**SQL 실행 기록:** `schema.sql`, `002`, `003`, `004`, `005` 모두 Supabase 실행 완료 (SQL은 Cowork Claude가 검토 후 실행)
+**SQL 실행 기록:** `schema.sql`, `002`, `003`, `004`, `005` 모두 Supabase 실행 완료 (SQL은 Cowork Claude가 검토 후 실행). `006_places.sql`은 아직 실행 전 (실행 후 Edge Function `link-preview` 배포)
 
 **완료**
 
@@ -55,6 +55,7 @@
 * 새 모임 첫 행동 강조("＋ 내 이름 넣기" 칩, "나" 없을 때 멤버 초대는 보조 버튼) + 안내 토스트 상단 표시·2초 자동 사라짐
 * 디자인 2차 "밝고 경쾌하게": 크림·코랄·청록 색감, 그림자 없이 카드·주요 버튼만 1.5px 갈색 테두리, theme-color, og-image 새로 만듦 (아래 "디자인 시스템"). 갈무리 픽셀 글꼴은 가독성 때문에 빼고 전체 Pretendard
 * 하단 타임라인 탭 바 + 단계별 화면 틀: 📅 날짜 / 📍 장소 / 💸 정산, URL `&tab=`, 장소·정산은 "곧 열려요", 확정 뒤 "📍 장소도 정할까요? →" (예전 단계 아이콘 바 계획은 이것으로 대체)
+* 장소 단계 1차: 지도 링크 붙여넣기 → 미리보기 카드 후보 → ❤️ 투표 → 확정, Edge Function `link-preview` (서버: `supabase/006_places.sql`, 실행·배포 전). 처음부터 다시 만들기가 장소·날짜 ❤️·확정 시각까지 초기화/복구
 
 **다음 할 일**
 
@@ -162,9 +163,47 @@
   * 아래로 스크롤하면 숨고 위로 스크롤하면 다시 나타남. 하단 시트가 열리면 시트가 탭 바를 덮음
   * 본문 아래에 탭 바 높이만큼 여백, 아이폰 `safe-area-inset-bottom` 반영 (`viewport-fit=cover`)
 * 날짜 화면: 날짜가 확정되면(지나지 않은 확정) 확정 배너 아래 작은 점선 버튼 "📍 장소도 정할까요? →" → 장소 단계로. 확정 전에는 숨김
-* 장소·정산은 "곧 열려요" 화면
-  * 장소: "📍 어디서 볼까요?" + "모두의 출발역 기준으로 공평한 지역을 추천하고, 식당까지 함께 정할 수 있게 준비 중이에요" + [📅 날짜로 돌아가기]
-  * 정산: "💸 얼마씩 내면 될까요?" + "누가 얼마 냈는지 적으면 송금할 금액을 알아서 계산해 주는 기능을 준비 중이에요" + [📅 날짜로 돌아가기]
+* 정산은 "곧 열려요" 화면: "💸 얼마씩 내면 될까요?" + "누가 얼마 냈는지 적으면 송금할 금액을 알아서 계산해 주는 기능을 준비 중이에요" + [📅 날짜로 돌아가기]
+* 탭 바 장소 단계: 장소가 확정되면 청록 ✓ + 장소 이름(말줄임), 장소 → 정산 선은 청록 실선
+
+## 장소 단계 (1차: 지도 링크 후보 + ❤️ 투표 + 확정)
+
+* 대중교통·지도·장소 검색은 아직 없음 (백로그 "장소 2차")
+* 화면: 제목 "📍 어디서 볼까요?" + 오른쪽 [＋ 링크 추가]
+  * 후보는 세로 카드 목록: 위에 가게 사진(있을 때 16:9, `referrerpolicy="no-referrer"`, 못 불러오면 사진 영역 숨김), 아래 장소 이름(굵게), 작은 글씨로 링크 도메인 + "🐸 추가"(추가한 사람), 오른쪽에 ❤️ 개수 + 투표한 사람 이모지 최대 3개
+  * 카드 탭 → 상세 시트, ❤️ 탭 → 내 투표 토글 (여러 곳 가능). 이 기기의 "나"가 없으면 "먼저 위에서 내 이름을 골라주세요"
+  * ❤️ 최다 후보에 👑 (동점이면 먼저 추가된 것, ❤️ 0개면 없음)
+  * 목록 아래 작은 텍스트 버튼 "이미 정했어요 →"
+  * 후보가 없으면 "네이버지도·카카오맵 링크를 붙여넣어 후보를 올려보세요" + [＋ 링크 추가] (이때 제목 옆 버튼은 숨김)
+* 링크 추가 시트 (키보드에 가리지 않게 위쪽 팝업)
+  * 입력칸 하나 "지도 링크를 붙여넣어 주세요" (바로 포커스). 붙여넣으면 바로 미리보기 요청 + "미리보기를 불러오는 중…"
+  * 여러 줄을 붙여넣으면 `https://`가 있는 줄의 링크만 사용. http 링크는 "https:// 로 시작하는 링크만 올릴 수 있어요"
+  * 성공: 미리보기 카드(사진 + 이름) + [후보로 올리기]
+  * 이름을 못 읽었거나 실패: 링크는 유지하고 "이름을 알려주세요" 칸(필수) + [후보로 올리기]
+  * 허용 도메인이 아닌 https 링크도 올릴 수 있음 (미리보기 없이 이름 칸)
+  * "이미 정했어요"로 열면 제목 "어디로 정했어요?", 올리면 바로 확정
+  * 같은 링크가 이미 후보에 있으면 "이미 올라온 곳이에요". 후보는 모임당 최대 10개
+* 상세 시트: 사진, 이름 + 작은 [이름 고치기], [🔗 지도에서 보기](새 창, `noopener noreferrer`), 투표한 사람 전체, [📍 이 장소로 확정](확정된 곳이면 [확정 취소]), [후보 삭제](확인 후)
+* 확정: 장소 화면 상단 배너 "📍 장소 이름" + [변경]. 날짜와 같은 방식(확정 중엔 목록 숨김, [변경]이면 목록 다시 + "다른 곳을 골라 다시 확정하세요", 확정은 유지)
+* 날짜 캘린더 추가(구글·.ics)에 확정 장소 포함: 설명에 "📍 장소 이름" + 지도 링크, 구글 `location` / .ics `LOCATION`
+* 보안: 사용자 입력·미리보기 결과는 모두 `textContent`로 표시, 링크·사진은 https만
+
+### 링크 미리보기 Edge Function (`supabase/functions/link-preview/index.ts`)
+
+* 입력 `{ url }` → `{ title, image, description, finalUrl }`. 오류는 400 `invalid_url`/`not_allowed`, 502 `fetch_failed`
+* https + 허용 도메인만: `naver.me`, `map.naver.com`, `m.map.naver.com`, `m.place.naver.com`, `pcmap.place.naver.com`, `kko.to`, `map.kakao.com`, `place.map.kakao.com`, `applink.map.kakao.com` (화면의 `PREVIEW_HOSTS`와 같게 유지)
+* 리다이렉트는 직접 따라가며 매번 허용 도메인 확인(벗어나면 중단), 최대 5회, 전체 5초, 응답 1MB까지만
+* og:title/og:image/og:description을 읽고, 제목 꼬리말(" : 네이버" 등) 정리, "카카오맵"처럼 일반적인 제목이면 빈 값
+* 카카오맵: 장소 id(`applink.map.kakao.com/...?id=`, `map.kakao.com/?itemId=`)가 보이면 `https://place.map.kakao.com/{id}`를 다시 읽음
+* `link_previews` 테이블에 url 기준 7일 캐시(이름을 읽은 결과만). 함수 안에서만 service role로 접근
+* CORS: `https://moilnal.github.io`(+ 로컬 확인용 `http://localhost`, `http://127.0.0.1`)만
+* 화면 호출: `db.functions.invoke('link-preview', { body: { url } })` (supabase-js가 publishable 키를 붙여 보냄, 8초 제한)
+* 배포 (Supabase 대시보드에서 직접)
+  * 006 SQL을 먼저 실행 (`link_previews` 테이블 필요)
+  * Edge Functions → 새 함수 이름 `link-preview` → `index.ts` 내용 붙여넣기 → Deploy
+  * **Verify JWT(JWT 검증)는 끈다**: publishable 키(`sb_publishable_...`)는 JWT가 아니라서 켜 두면 401
+  * Secret 추가 없음: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`는 Supabase가 자동으로 넣어줌. 레거시 키를 꺼서 `SUPABASE_SERVICE_ROLE_KEY`가 없는 프로젝트면 Secret `MOILNAL_SECRET_KEY`에 `sb_secret_...` 키
+  * 키가 없어도 미리보기는 동작하고 캐시만 안 됨
 
 ## 기능 로드맵 (한 번에 한 단계씩만 구현)
 
@@ -218,16 +257,16 @@
 * `schema.sql`은 그대로 두고, 변경은 `supabase/002_...sql`처럼 번호 붙인 새 파일로 추가
 * 새 파일에서 기존 데이터를 지우는 명령(drop table, delete, truncate)은 쓰지 않는다
 * 새 RPC는 anon에만 grant execute, cleanup 함수는 계속 막아둔다
-* "처음부터 다시 만들기": 같은 링크는 그대로 두고 참여자/안 되는 날/확정 날짜를 초기화 (기본 4명 빈자리 상태)
+* "처음부터 다시 만들기": 같은 링크는 그대로 두고 참여자/안 되는 날/날짜 ❤️·가능 시간/확정 날짜·시각/장소 후보·장소 ❤️·확정 장소를 초기화 (기본 4명 빈자리 상태). 되돌리기로 전부 함께 복구 (006부터)
   * 확인 팝업: "모든 참여자의 입력과 확정 날짜가 지워져요. 친구들 화면에도 바로 반영돼요. 정말 처음부터 다시 만들까요?"
   * 초기화 직전 데이터를 24시간 보관하고, 그동안 상단에 "초기화됨 · 되돌리기" 표시. 되돌리기를 누르면 복구
   * RPC 함수 `reset_room(room_id)`, `undo_reset(room_id)`
 
 **DB 구조 (`supabase/schema.sql`)**
 
-* 테이블: `rooms`(모임, 인원수·확정 날짜·확정 시각 `confirmed_hour`·마지막 접속 시각), `members`(참여자), `unavailable`(안 되는 날), `date_votes`(❤️ 투표 + 가능 시간 `start_hour`~`end_hour`, 10~24시, 날짜별·사람별, 참여자 삭제 시 cascade), `room_reset_backups`(초기화 되돌리기용 24시간 보관)
-* 단계별 데이터는 독립 테이블. 시간/지역/장소/정산은 나중에 `room_id`를 가진 새 테이블로 추가
-* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신 + (004) 해제해도 응답 완료 유지 + (005) `toggle_vote`(❤️, 켜면 응답 완료), `set_vote_hours`(10~24시, 시작 < 끝 검증), `confirm_date`(날짜 + 시각 확정/취소, 화면은 이것만 사용), `get_room`에 `confirmed.hour`·`votes` 포함
+* 테이블: `rooms`(모임, 인원수·확정 날짜·확정 시각 `confirmed_hour`·마지막 접속 시각), `members`(참여자), `unavailable`(안 되는 날), `date_votes`(❤️ 투표 + 가능 시간 `start_hour`~`end_hour`, 10~24시, 날짜별·사람별, 참여자 삭제 시 cascade), `room_reset_backups`(초기화 되돌리기용 24시간 보관) + (006) `places`(장소 후보: url·title·image·추가한 사람 `added_by`, 모임당 10개, 같은 링크 1번, 참여자를 지워도 후보는 유지), `place_votes`(장소 ❤️, 참여자 삭제 시 cascade), `link_previews`(미리보기 캐시, Edge Function 전용), `rooms.confirmed_place_id`(확정 장소)
+* 단계별 데이터는 독립 테이블. 지역/정산은 나중에 `room_id`를 가진 새 테이블로 추가
+* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신 + (004) 해제해도 응답 완료 유지 + (005) `toggle_vote`(❤️, 켜면 응답 완료), `set_vote_hours`(10~24시, 시작 < 끝 검증), `confirm_date`(날짜 + 시각 확정/취소, 화면은 이것만 사용), `get_room`에 `confirmed.hour`·`votes` 포함 + (006) `add_place`, `rename_place`, `delete_place`, `toggle_place_vote`, `confirm_place`, `get_room`에 `places`·`confirmed_place` 포함, `reset_room`·`undo_reset`이 장소·날짜 ❤️·확정 시각까지 보관/복구
 * 실시간: 쓰기 RPC가 끝나면 서버가 모임 ID 이름의 Realtime broadcast 채널로 "changed" 알림을 보내고, 화면은 알림을 받으면 `get_room`으로 다시 불러온다 (RLS 때문에 postgres_changes 구독은 쓰지 않음)
   * 서버 알림은 공개 채널(`realtime.send(..., private => false)`)이라 anon이 별도 정책 없이 받을 수 있음 (실제 수신 확인함)
   * 다시 불러오기는 300ms 모아서 한 번, 저장 중에는 미룸. 탭 복귀·재연결 시에도 다시 불러옴
@@ -254,6 +293,8 @@
 * 서브 항목: 재촉하기 (압박감 우려로 보류, 필요성이 확인되면 가볍고 귀여운 방식으로 재검토)
 * 설명 문구 정리 (안내 문구·토스트 등): 실사용 반응을 보고 재검토
 * 가능 시간이 둘로 나뉘는 경우(점심·저녁만 가능 등)는 실사용 요청 시 보완 (지금은 범위 하나)
+* 장소 2차: 이름으로 장소 검색(카카오 장소 검색), 출발역 기반 대중교통 시간으로 지역 추천 + 지도
+* 하단 탭 바 대안 검토: 탭 바 대신 달력 아래 은은한 타임라인 + "장소 정하기 >"
 
 ## 장기 비전 (아직 구현하지 않음. 따로 요청할 때만 진행)
 
@@ -294,8 +335,8 @@
 
 ### 장소
 
-* 확정된 지역 안에서 가게 후보 등록(이름 + 지도 링크 + 카테고리) 및 이모지 투표
-* 2차로 카카오 로컬 API 검색 연동
+* 1차 완료: 지도 링크 붙여넣기 → 미리보기 카드 후보 + ❤️ 투표 + 확정 (위 "장소 단계" 참고)
+* 2차로 카카오 로컬 API 검색 연동 (백로그 "장소 2차")
 
 ### 정산
 
