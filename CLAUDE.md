@@ -23,7 +23,7 @@
 
 **배포 주소:** https://moilnal.github.io/
 
-**SQL 실행 기록:** `schema.sql`, `002`, `003`, `004`, `005` 모두 Supabase 실행 완료 (SQL은 Cowork Claude가 검토 후 실행). `006_places.sql`, `007_place_address.sql`은 아직 실행 전 (006 → 007 순서로 실행 후 Edge Function `link-preview` 배포)
+**SQL 실행 기록:** `schema.sql`, `002`, `003`, `004`, `005`, `006`, `007`, `008` 모두 Supabase 실행 완료 (SQL은 Cowork Claude가 검토 후 실행)
 
 **완료**
 
@@ -55,17 +55,18 @@
 * 새 모임 첫 행동 강조("＋ 내 이름 넣기" 칩, "나" 없을 때 멤버 초대는 보조 버튼) + 안내 토스트 상단 표시·2초 자동 사라짐
 * 디자인 2차 "밝고 경쾌하게": 크림·코랄·청록 색감, 그림자 없이 카드·주요 버튼만 1.5px 갈색 테두리, theme-color, og-image 새로 만듦 (아래 "디자인 시스템"). 갈무리 픽셀 글꼴은 가독성 때문에 빼고 전체 Pretendard
 * 하단 타임라인 탭 바 + 단계별 화면 틀: 📅 날짜 / 📍 장소 / 💸 정산, URL `&tab=`, 장소·정산은 "곧 열려요", 확정 뒤 "📍 장소도 정할까요? →" (예전 단계 아이콘 바 계획은 이것으로 대체)
-* 장소 단계 1차: 지도 링크 붙여넣기 → 미리보기 카드 후보 → ❤️ 투표 → 확정, Edge Function `link-preview` (서버: `supabase/006_places.sql`, 실행·배포 전). 처음부터 다시 만들기가 장소·날짜 ❤️·확정 시각까지 초기화/복구
-* 장소 붙여넣기 개선: 지도 앱 공유 문구에서 이름·주소·링크 자동 채우기, 이름은 선택(못 읽으면 "네이버지도 장소"/"카카오맵 장소"/"새 장소"), 주소 저장·표시·캘린더 위치, 지도 공용 이미지 거르기, 사진 없는 카드는 작은 📍 (서버: `supabase/007_place_address.sql`, 실행 전)
+* 장소 단계 1차: 지도 링크 붙여넣기 → 미리보기 카드 후보 → ❤️ 투표 → 확정, Edge Function `link-preview` (서버: `supabase/006_places.sql`). 처음부터 다시 만들기가 장소·날짜 ❤️·확정 시각까지 초기화/복구
+* 장소 붙여넣기 개선: 지도 앱 공유 문구에서 이름·주소·링크 자동 채우기, 이름은 선택(못 읽으면 "네이버지도 장소"/"카카오맵 장소"/"새 장소"), 주소 저장·표시·캘린더 위치, 지도 공용 이미지 거르기, 사진 없는 카드는 작은 📍 (서버: `supabase/007_place_address.sql`)
 
 * "나" 중심 조작: 모든 조작(날짜 ❤️·시간, 장소 ❤️·추가)은 이 기기의 "나"로 자동 기록, "나"가 없으면 "누구세요?" 시트 후 하던 조작 이어서, 남의 칩은 "OO 님으로 바꿀까요?" 확인, 입력 모드는 [✏️ 내 안 되는 날 찍기]/내 칩 (아래 "'나' 중심 조작")
+* 정산 1차: 차수 카드(이름·계산한 사람·금액·참여 인원) → n분의 1(100원 올림) → 송금 목록 → [💬 단톡에 공유](계좌는 기기에만) (서버: `supabase/008_settle.sql`, 아래 "정산 단계")
 
 **다음 할 일**
 
 1. 12월 모임 실사용 → 피드백 수집
 2. 디자인 정리 단계: 첫 화면 이해도 점검, 글꼴·색감
 3. 2부: 지역 → 장소
-4. 정산
+4. 008 실행 후 정산 실사용 확인 (저장·실시간 반영·초기화/되돌리기)
 
 **작업 루틴**
 
@@ -172,7 +173,7 @@
   * 아래로 스크롤하면 숨고 위로 스크롤하면 다시 나타남. 하단 시트가 열리면 시트가 탭 바를 덮음
   * 본문 아래에 탭 바 높이만큼 여백, 아이폰 `safe-area-inset-bottom` 반영 (`viewport-fit=cover`)
 * 날짜 화면: 날짜가 확정되면(지나지 않은 확정) 확정 배너 아래 작은 점선 버튼 "📍 장소도 정할까요? →" → 장소 단계로. 확정 전에는 숨김
-* 정산은 "곧 열려요" 화면: "💸 얼마씩 내면 될까요?" + "누가 얼마 냈는지 적으면 송금할 금액을 알아서 계산해 주는 기능을 준비 중이에요" + [📅 날짜로 돌아가기]
+* 정산 화면은 아래 "정산 단계" 참고 (탭 바 상태 글씨는 "모인 뒤" 그대로)
 * 탭 바 장소 단계: 장소가 확정되면 청록 ✓ + 장소 이름(말줄임), 장소 → 정산 선은 청록 실선
 
 ## 장소 단계 (1차: 지도 링크 후보 + ❤️ 투표 + 확정)
@@ -219,6 +220,31 @@
   * **Verify JWT(JWT 검증)는 끈다**: publishable 키(`sb_publishable_...`)는 JWT가 아니라서 켜 두면 401
   * Secret 추가 없음: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`는 Supabase가 자동으로 넣어줌. 레거시 키를 꺼서 `SUPABASE_SERVICE_ROLE_KEY`가 없는 프로젝트면 Secret `MOILNAL_SECRET_KEY`에 `sb_secret_...` 키
   * 키가 없어도 미리보기는 동작하고 캐시만 안 됨
+
+## 정산 단계 (1차: 차수별 n분의 1 + 송금 목록 + 공유)
+
+* 화면: 제목 "💸 얼마씩 내면 될까요?" + 차수 카드 목록 + [＋ N차 추가](최대 10개) + "보낼 돈" 결과 + [💬 단톡에 공유]
+* 저장된 차수가 없으면 화면에만 있는 "1차" 카드를 보여주고, 첫 입력(계산한 사람·금액·참여 인원·이름) 때 `add_round`로 그 내용 그대로 서버에 만듦. 그 전에 [＋ 2차 추가]를 누르면 1차부터 저장
+* 차수 카드
+  * 머리줄: "1차" 배지 + 이름(기본값 "N차"면 배지만, 탭 → 이름 바꾸기 1~20자) + ⋯ → "N차를 삭제할까요?" 확인
+  * 계산한 사람: 참여자 칩 중 하나(선택 = 코랄 테두리 + 연한 코랄). 새 차수의 기본값은 "나". 계산한 사람이 지워졌으면(null) 금액이 있을 때 "계산한 사람을 골라주세요"
+  * 금액: `inputmode="numeric"`, 쉼표 자동 + "원", 0~1천만 원. 입력을 멈추고 0.8초 뒤·칸을 떠날 때·Enter에 저장. 입력 중에는 실시간 다시 그리기가 칸을 덮어쓰지 않게 차수 카드 다시 그리기를 미룸(결과는 바로 갱신)
+  * 참여 인원: 기본 전원(이름 있는 참여자 − 빠진 사람, 나중에 들어온 사람은 자동 포함), 칩 탭으로 빼기/넣기(빠진 사람은 흐리게). 요약 "4명 · 1인 30,000원"
+  * 빈자리 칩("❔ 빈자리") → "친구 이름 넣기" 시트(이모지 + 이름, 기존 `save_member`). 이 기기의 "나"로 정하지 않음. 정산 화면에서만 다른 사람 이름을 넣을 수 있음. 그사이 자리가 다 찼으면 "방금 빈자리가 다 찼어요"
+  * 모든 조작은 `requireMe` ("나"가 없으면 "누구세요?" 후 이어서)
+* 계산 (n분의 1만. 사람별 금액 다르게는 백로그)
+  * 1인 몫 = `Math.ceil(금액 / (참여 인원 × 100)) × 100` (100원 단위 올림, 계산한 사람이 조금 더 받음)
+  * 참여 인원 중 계산한 사람이 아닌 사람이 몫을 냄. 계산한 사람이 참여 인원에 없으면 전원이 냄
+  * 금액 0, 계산한 사람 없음, 참여 인원 0명인 차수는 계산·공유에서 빠짐
+  * 모든 차수를 합친 사람별 잔액 → 가장 많이 낼 사람과 가장 많이 받을 사람을 차례로 맞춰 송금 목록
+  * 결과 "🐷 바보 → 🐻 재현 30,000원", 내가 보내거나 받는 줄은 굵게. 없으면 "금액을 넣으면 누가 누구에게 보낼지 알려드려요"(정산할 차수는 있는데 주고받을 게 없으면 "주고받을 돈이 없어요"), 이때 공유 버튼은 숨김
+* 공유: 내가 받을 돈이 있으면 먼저 시트 "받을 계좌 (선택)"(40자, 다음엔 자동으로 채움) → [공유하기]. 받을 돈이 없으면 바로 공유
+  * 계좌는 이 기기 localStorage(`moilnal-local.account`)에만 저장하고 서버로 보내지 않음
+  * `navigator.share({ text })`, 없거나 실패하면(사용자가 닫은 경우 제외) 클립보드 복사 + 토스트(복사도 안 되면 직접 복사 팝업)
+  * 계산한 사람이 없는 차수가 있으면 "계산한 사람이 없는 차수는 빠져요" 안내
+  * 텍스트: "[모일날] 모임명 정산 💸" / 차수별 "1차 고깃집 120,000원 · 4명 · 🐻 재현 결제"(이름이 기본값이면 "1차"만) / "─────" / 송금 목록 / (계좌가 있으면) "🐻 재현: 계좌" / 모임 링크
+* "보냈어요" 체크는 만들지 않음 (백로그)
+* 실시간: 기존처럼 broadcast → `get_room` 재조회 (`rounds` 포함)
 
 ## 기능 로드맵 (한 번에 한 단계씩만 구현)
 
@@ -279,9 +305,9 @@
 
 **DB 구조 (`supabase/schema.sql`)**
 
-* 테이블: `rooms`(모임, 인원수·확정 날짜·확정 시각 `confirmed_hour`·마지막 접속 시각), `members`(참여자), `unavailable`(안 되는 날), `date_votes`(❤️ 투표 + 가능 시간 `start_hour`~`end_hour`, 10~24시, 날짜별·사람별, 참여자 삭제 시 cascade), `room_reset_backups`(초기화 되돌리기용 24시간 보관) + (006) `places`(장소 후보: url·title·image·추가한 사람 `added_by`, 모임당 10개, 같은 링크 1번, 참여자를 지워도 후보는 유지), `place_votes`(장소 ❤️, 참여자 삭제 시 cascade), `link_previews`(미리보기 캐시, Edge Function 전용), `rooms.confirmed_place_id`(확정 장소) + (007) `places.address`(주소, 선택 80자)
-* 단계별 데이터는 독립 테이블. 지역/정산은 나중에 `room_id`를 가진 새 테이블로 추가
-* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신 + (004) 해제해도 응답 완료 유지 + (005) `toggle_vote`(❤️, 켜면 응답 완료), `set_vote_hours`(10~24시, 시작 < 끝 검증), `confirm_date`(날짜 + 시각 확정/취소, 화면은 이것만 사용), `get_room`에 `confirmed.hour`·`votes` 포함 + (006) `add_place`, `rename_place`, `delete_place`, `toggle_place_vote`, `confirm_place`, `get_room`에 `places`·`confirmed_place` 포함, `reset_room`·`undo_reset`이 장소·날짜 ❤️·확정 시각까지 보관/복구 + (007) `add_place`에 `p_address` 인자 추가(인자 6개, 예전 5개 버전은 지움), `get_room`·`reset_room`·`undo_reset`에 주소 포함
+* 테이블: `rooms`(모임, 인원수·확정 날짜·확정 시각 `confirmed_hour`·마지막 접속 시각), `members`(참여자), `unavailable`(안 되는 날), `date_votes`(❤️ 투표 + 가능 시간 `start_hour`~`end_hour`, 10~24시, 날짜별·사람별, 참여자 삭제 시 cascade), `room_reset_backups`(초기화 되돌리기용 24시간 보관) + (006) `places`(장소 후보: url·title·image·추가한 사람 `added_by`, 모임당 10개, 같은 링크 1번, 참여자를 지워도 후보는 유지), `place_votes`(장소 ❤️, 참여자 삭제 시 cascade), `link_previews`(미리보기 캐시, Edge Function 전용), `rooms.confirmed_place_id`(확정 장소) + (007) `places.address`(주소, 선택 80자) + (008) `settle_rounds`(정산 차수: sort·name 1~20자·계산한 사람 `payer_id`(참여자 삭제 시 null)·amount 0~1천만·빠진 사람 `excluded_ids`, 모임당 10개)
+* 단계별 데이터는 독립 테이블. 지역은 나중에 `room_id`를 가진 새 테이블로 추가
+* RPC: `create_room`, `get_room`, `save_member`, `delete_member`, `set_room_size`, `toggle_unavailable`, `set_responded`, `set_confirmed_date`, `reset_room`, `undo_reset` + (002) `set_room_name`, `delete_room`, `restore_room` + (003) `toggle_unavailable`이 응답 여부(`members.responded`)도 자동 갱신 + (004) 해제해도 응답 완료 유지 + (005) `toggle_vote`(❤️, 켜면 응답 완료), `set_vote_hours`(10~24시, 시작 < 끝 검증), `confirm_date`(날짜 + 시각 확정/취소, 화면은 이것만 사용), `get_room`에 `confirmed.hour`·`votes` 포함 + (006) `add_place`, `rename_place`, `delete_place`, `toggle_place_vote`, `confirm_place`, `get_room`에 `places`·`confirmed_place` 포함, `reset_room`·`undo_reset`이 장소·날짜 ❤️·확정 시각까지 보관/복구 + (007) `add_place`에 `p_address` 인자 추가(인자 6개, 예전 5개 버전은 지움), `get_room`·`reset_room`·`undo_reset`에 주소 포함 + (008) `add_round`(첫 입력 때 이름·계산한 사람·금액·빠진 사람을 한 번에), `rename_round`, `set_round_payer`, `set_round_amount`, `toggle_round_member`(true = 참여), `delete_round`, `get_room`에 `rounds` 포함, `reset_room`·`undo_reset`이 정산 차수까지 보관/복구. 친구 이름 넣기는 기존 `save_member(null, …)` 그대로
 * 실시간: 쓰기 RPC가 끝나면 서버가 모임 ID 이름의 Realtime broadcast 채널로 "changed" 알림을 보내고, 화면은 알림을 받으면 `get_room`으로 다시 불러온다 (RLS 때문에 postgres_changes 구독은 쓰지 않음)
   * 서버 알림은 공개 채널(`realtime.send(..., private => false)`)이라 anon이 별도 정책 없이 받을 수 있음 (실제 수신 확인함)
   * 다시 불러오기는 300ms 모아서 한 번, 저장 중에는 미룸. 탭 복귀·재연결 시에도 다시 불러옴
@@ -300,7 +326,8 @@
 
 * 내가 들어갔던 모임 목록("내 모임")
 * 각 모임에서 내가 누구인지 기억 (빈자리를 채웠거나, "누구세요?"에서 골랐거나, "OO 님으로 바꿀까요?"에서 맞아요 했을 때) → 다시 접속하면 "OO 님 반가워요 👋"만 보여주고 보기 모드로 시작
-* 저장 키: `moilnal-local` = `{ rooms: [{id, label, visitedAt}], me: {모임ID: 참여자ID} }`. 모임 데이터 자체는 localStorage에 저장하지 않음
+* 정산 공유용 내 계좌 (서버로 보내지 않음)
+* 저장 키: `moilnal-local` = `{ rooms: [{id, label, visitedAt}], me: {모임ID: 참여자ID}, account: '계좌' }`. 모임 데이터 자체는 localStorage에 저장하지 않음
 
 ## 백로그 (디자인 단계에서 반영)
 
@@ -310,6 +337,7 @@
 * 장소 2차: 이름으로 장소 검색(카카오 장소 검색), 출발역 기반 대중교통 시간으로 지역 추천 + 지도
 * 입력 모드 안내 강화: 2초 토스트 대신 달력 위 고정 안내 줄 등 (다음 디자인 작업 때 상의)
 * 하단 탭 바 대안 검토: 탭 바 대신 달력 아래 은은한 타임라인 + "장소 정하기 >"
+* 정산 2차: 사람별 금액 다르게(n분의 1 외), "보냈어요" 송금 완료 체크
 
 ## 장기 비전 (아직 구현하지 않음. 따로 요청할 때만 진행)
 
@@ -355,7 +383,8 @@
 
 ### 정산
 
-* 지출 항목 입력(금액, 결제자, 해당 참여자), 최소 송금 횟수 정산, 송금 완료 체크
+* 1차 완료: 차수별 금액·계산한 사람·참여 인원 → n분의 1 송금 목록 + 공유 (위 "정산 단계" 참고)
+* 2차: 사람별 금액, 송금 완료 체크 (백로그 "정산 2차")
 
 ## 작업 방식
 

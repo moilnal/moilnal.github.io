@@ -1041,6 +1041,115 @@
     }
     .tabbar .link.solid { border-top-style: solid; border-color: var(--ok); }
 
+    /* ---------- 정산 단계 ---------- */
+    .settle { padding: 16px 14px; }
+    .round-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .round { border: 1.5px solid var(--line); border-radius: 16px; background: #fff; padding: 10px 12px 12px; }
+    .round-head { display: flex; align-items: center; gap: 8px; }
+    .round-no {
+      flex: none;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .round-name {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: none;
+      padding: 0;
+      text-align: left;
+      color: var(--text) !important;
+      font-size: 16px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .round-name small { margin-left: 4px; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .round .more-btn { width: 36px; height: 36px; margin-right: -6px; }
+    .round-label { margin: 12px 0 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+    .mini-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 32px;
+      padding: 0 10px;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      color: var(--text) !important;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mini-chip.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text) !important; }
+    .mini-chip.off { opacity: 0.4; }
+    .mini-chip.empty { border-style: dashed; color: var(--muted) !important; }
+    .amount-row { display: flex; align-items: center; gap: 8px; }
+    .amount-input {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: right;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .amount-input:focus { border-color: var(--accent); }
+    .amount-row span { font-size: 15px; font-weight: 700; }
+    .round-sum { margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .round-warn { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--no-text); }
+    .add-round-btn {
+      display: block;
+      width: 100%;
+      height: 44px;
+      margin-top: 10px;
+      border: 1.5px dashed #d9c6b2;
+      border-radius: 14px;
+      background: none;
+      color: var(--accent-text) !important;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .add-round-btn[hidden] { display: none; }
+    .settle-result { margin-top: 16px; padding-top: 4px; border-top: 1px solid var(--line); }
+    .transfer {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 15px;
+    }
+    .transfer:last-child { border-bottom: none; }
+    .transfer.mine { font-weight: 800; }
+    .transfer b { flex: none; }
+    .settle-empty { font-size: 14px; color: var(--muted); line-height: 1.6; word-break: keep-all; }
+    .account-input {
+      width: 100%;
+      height: 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+    .account-input:focus { border-color: var(--accent); }
+
     /* ---------- 장소 단계 ---------- */
     .place { padding: 16px 14px; }
     .place-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -1302,11 +1411,16 @@
         <button id="decidedBtn" class="decided-btn">이미 정했어요 →</button>
       </section>
 
-      <!-- 정산 단계: 곧 열려요 -->
-      <section class="card soon settle-only">
-        <h2 class="soon-title">💸 얼마씩 내면 될까요?</h2>
-        <p class="soon-desc">누가 얼마 냈는지 적으면 송금할 금액을 알아서 계산해 주는 기능을 준비 중이에요</p>
-        <button class="btn ghost full back-date">📅 날짜로 돌아가기</button>
+      <!-- 정산 단계: 차수별 지출 → n분의 1 → 송금 목록 -->
+      <section class="card settle settle-only">
+        <h2 class="place-title">💸 얼마씩 내면 될까요?</h2>
+        <div id="roundList" class="round-list"></div>
+        <button id="addRoundBtn" class="add-round-btn">＋ 2차 추가</button>
+        <div class="settle-result">
+          <div class="round-label">보낼 돈</div>
+          <div id="transferList"></div>
+          <button id="shareSettleBtn" class="btn primary full sheet-actions">💬 단톡에 공유</button>
+        </div>
       </section>
     </div>
   </div>
@@ -1371,7 +1485,11 @@
       invalid_place_title: '장소 이름은 1~40자로 써주세요',
       place_exists: '이미 올라온 곳이에요',
       too_many_places: '후보는 10개까지 올릴 수 있어요',
-      place_not_found: '후보를 찾을 수 없어요'
+      place_not_found: '후보를 찾을 수 없어요',
+      invalid_round_name: '차수 이름은 1~20자로 써주세요',
+      invalid_amount: '금액은 1천만 원까지 쓸 수 있어요',
+      too_many_rounds: '차수는 10개까지 만들 수 있어요',
+      round_not_found: '차수를 찾을 수 없어요'
     };
     const DEFAULT_ROOM_NAME = '새 모임';
     const FLASH_KEY = 'moilnal-flash';   // 다른 모임으로 이동한 뒤 보여줄 안내 (sessionStorage)
@@ -1384,12 +1502,15 @@
     // ===== 이 기기에만 저장 (localStorage) =====
     // rooms: 내가 들어갔던 모임 목록 [{ id, name, label, visitedAt }]
     // me:    모임별 "나는 누구" { 모임ID: 참여자ID }
+    // account: 정산 공유 때 붙일 내 계좌 (이 기기에만, 서버로 보내지 않음)
     function loadLocal() {
       try {
         const s = JSON.parse(localStorage.getItem(LOCAL_KEY));
-        if (s && Array.isArray(s.rooms)) return { rooms: s.rooms, me: s.me || {} };
+        if (s && Array.isArray(s.rooms)) {
+          return { rooms: s.rooms, me: s.me || {}, account: typeof s.account === 'string' ? s.account : '' };
+        }
       } catch (e) {}
-      return { rooms: [], me: {} };
+      return { rooms: [], me: {}, account: '' };
     }
     function saveLocal() {
       try { localStorage.setItem(LOCAL_KEY, JSON.stringify(local)); } catch (e) {}
@@ -1407,6 +1528,7 @@
       confirmed: null,      // { key: '2026-11-07', known: [id, ...], hour: 19 | null }
       places: [],           // 장소 후보 [{ id, url, title, image, by, votes: [참여자 id, ...] }]
       placeId: null,        // 확정 장소 id
+      rounds: [],           // 정산 차수 [{ id, name, payer, amount, excluded: [참여자 id, ...] }]
       undoUntil: null,      // 초기화 되돌리기 가능한 시각
       selectedId: null      // 지금 입력 중인 사람 (null이면 보기 모드)
     };
@@ -1521,7 +1643,7 @@
       const backup = JSON.stringify({
         name: state.name, size: state.size, participants: state.participants,
         marks: state.marks, votes: state.votes, confirmed: state.confirmed, undoUntil: state.undoUntil,
-        places: state.places, placeId: state.placeId
+        places: state.places, placeId: state.placeId, rounds: state.rounds
       });
       if (optimistic) { optimistic(); render(); }
 
@@ -1614,6 +1736,9 @@
       state.votes = data.votes || {};
       state.places = data.places || [];
       state.placeId = data.confirmed_place || null;
+      state.rounds = (data.rounds || []).map(r => ({
+        id: r.id, name: r.name, payer: r.payer || null, amount: r.amount || 0, excluded: r.excluded || []
+      }));
       state.confirmed = data.confirmed
         ? { key: data.confirmed.date, known: data.confirmed.known || [], hour: data.confirmed.hour ?? null }
         : null;
@@ -1800,14 +1925,31 @@
         }, 'primary');
     }
 
+    // 친구 이름 넣기 성공: 참여자 목록에만 넣음 ("나"·입력 모드는 그대로)
+    function friendAdded(id, name, emoji) {
+      if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
+      newEmoji = null;
+      closeSheet();
+      render();
+      toast(`${emoji} ${name} 님을 넣었어요`);
+    }
+
+    // 친구 이름을 넣으려는데 그사이 자리가 다 참 → 최신 상태로 맞추고 안내만
+    async function friendSlotTaken() {
+      closeSheet();
+      await refetch();
+      toast('방금 빈자리가 다 찼어요');
+    }
+
     // 빈자리 칩을 누르면: 이모지 버튼 + 이름 입력 + 저장
-    function openFillSlot(after) {
+    // friend: 정산 화면의 "친구 이름 넣기" (저장해도 이 기기의 "나"로 정하지 않음)
+    function openFillSlot(after, friend) {
       if (typeof after !== 'function') after = null;   // 칩 클릭 이벤트로 불렸을 때
       ensureNewEmoji();
       let input;
       openSheet(body => {
         body.className = 'add-sheet';
-        body.append(h('h3', 'sheet-title', '내 이름 넣기'),
+        body.append(h('h3', 'sheet-title', friend ? '친구 이름 넣기' : '내 이름 넣기'),
                     h('p', 'sheet-desc', '이모지를 누르면 캐릭터를 바꿀 수 있어요.'));
 
         const row = h('div', 'add-row');
@@ -1843,7 +1985,9 @@
           if (!name) return toast('이름을 입력해주세요');
           if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
           const emoji = newEmoji;
-          if (emptySlots() <= 0) return slotTaken(name, emoji, after);   // 팝업을 연 사이 실시간으로 자리가 찼음
+          if (emptySlots() <= 0) {   // 팝업을 연 사이 실시간으로 자리가 찼음
+            return friend ? friendSlotTaken() : slotTaken(name, emoji, after);
+          }
 
           saving = true;
           saveBtn.disabled = true;
@@ -1853,9 +1997,13 @@
           saveBtn.disabled = false;
           if (!res.ok) {
             // 서버가 모임을 잠그고 인원을 세서, 그사이 다른 사람이 자리를 채웠으면 room_full 로 거절함 (덮어쓰지 않음)
-            if (res.error && res.error.message === 'room_full') slotTaken(name, emoji, after);
+            if (res.error && res.error.message === 'room_full') {
+              if (friend) friendSlotTaken();
+              else slotTaken(name, emoji, after);
+            }
             return;
           }
+          if (friend) return friendAdded(res.data, name, emoji);
           joinedAs(res.data, name, emoji, after);
         };
         saveBtn.addEventListener('click', submit);
@@ -2598,6 +2746,7 @@
                 state.votes = {};
                 state.places = [];
                 state.placeId = null;
+                state.rounds = [];
                 state.confirmed = null;
                 state.selectedId = null;
                 state.undoUntil = new Date(Date.now() + 86400000);
@@ -2947,6 +3096,7 @@
       renderPeople();
       renderCalendar();
       renderPlaces();
+      renderSettle();
       renderTabbar();
     }
 
@@ -3515,6 +3665,370 @@
       if (!document.hidden && roomId) scheduleRefetch();
     });
 
+    // ===== 정산 단계: 차수별 지출 → n분의 1 → 송금 목록 =====
+    const MAX_ROUNDS = 10;
+    const MAX_AMOUNT = 10000000;
+    const roundIds = {};     // 만드는 중인 임시 차수 id → Promise(진짜 id, 실패하면 null)
+    let tmpRoundSeq = 0;
+    let settleDirty = false; // 금액 입력 중이라 미뤄 둔 차수 카드 다시 그리기
+    let holdRounds = false;  // 금액 칸을 막 떠난 직후 (칩 탭이 사라지지 않게 잠깐 미룸)
+
+    const won = n => n.toLocaleString('ko-KR');
+    const roundNo = i => `${i + 1}차`;
+    function findRound(id) {
+      return state.rounds.find(r => r.id === id);
+    }
+    // 화면에만 있는 1차 카드 (저장된 차수가 없을 때). 첫 입력 때 서버에 만듦
+    function draftRound() {
+      return { id: null, name: '1차', payer: myId(), amount: 0, excluded: [] };
+    }
+    // 참여 인원 = 이름 있는 참여자 - 빠진 사람 (나중에 들어온 사람은 자동 포함)
+    function roundPeople(r) {
+      return state.participants.filter(p => !r.excluded.includes(p.id));
+    }
+    // 1인 몫: 100원 단위 올림 (계산한 사람이 조금 더 받음)
+    function roundShare(r, n) {
+      return n ? Math.ceil(r.amount / (n * 100)) * 100 : 0;
+    }
+    // 정산에 들어가는 차수: 금액이 있고, 계산한 사람이 있고, 참여 인원이 1명 이상
+    function countedRound(r) {
+      return r.amount > 0 && !!findPerson(r.payer) && roundPeople(r).length > 0;
+    }
+    // 이름이 기본값("N차")이면 배지와 겹치지 않게 이름은 비움
+    function roundTitle(r, i) {
+      return r.name === roundNo(i) ? '' : r.name;
+    }
+
+    // 모든 차수를 합친 송금 목록 [{ from, to, amount }]
+    function settleTransfers() {
+      const bal = {};
+      for (const r of state.rounds) {
+        if (!countedRound(r)) continue;
+        const people = roundPeople(r);
+        const share = roundShare(r, people.length);
+        for (const p of people) {
+          if (p.id === r.payer) continue;   // 계산한 사람이 참여 인원에 없으면 전원이 냄
+          bal[p.id] = (bal[p.id] || 0) - share;
+          bal[r.payer] = (bal[r.payer] || 0) + share;
+        }
+      }
+      // 가장 많이 낼 사람 ↔ 가장 많이 받을 사람을 차례로 맞춤
+      const debt = Object.entries(bal).filter(([, v]) => v < 0).map(([id, v]) => ({ id, v: -v }));
+      const cred = Object.entries(bal).filter(([, v]) => v > 0).map(([id, v]) => ({ id, v }));
+      const out = [];
+      while (debt.length && cred.length) {
+        debt.sort((a, b) => b.v - a.v);
+        cred.sort((a, b) => b.v - a.v);
+        const d = debt[0], c = cred[0];
+        const x = Math.min(d.v, c.v);
+        out.push({ from: d.id, to: c.id, amount: x });
+        d.v -= x;
+        c.v -= x;
+        if (!d.v) debt.shift();
+        if (!c.v) cred.shift();
+      }
+      return out;
+    }
+
+    // 차수 만들기 (반환: 진짜 id 또는 null)
+    function createRound(r) {
+      const tmp = `tmp-${Date.now()}-${++tmpRoundSeq}`;
+      roundIds[tmp] = write('add_round',
+        { p_name: r.name, p_payer_id: r.payer, p_amount: r.amount, p_excluded_ids: r.excluded }, () => {
+          state.rounds.push({ ...r, id: tmp, excluded: [...r.excluded] });
+        }).then(res => {
+          if (!res.ok) return null;
+          const x = findRound(tmp);
+          if (x) x.id = res.data;
+          return res.data;
+        });
+      return roundIds[tmp];
+    }
+
+    // 화면의 차수 → 서버 id (만드는 중이면 끝날 때까지 기다림, 화면에만 있는 1차면 null)
+    async function realRoundId(r) {
+      if (!r.id) return state.rounds.length ? realRoundId(state.rounds[0]) : null;
+      return roundIds[r.id] ? roundIds[r.id] : r.id;
+    }
+
+    // 차수 고치기. 화면에만 있는 1차면 바뀐 내용을 담아 한 번에 만듦
+    async function editRound(r, apply, rpc, args) {
+      if (!r.id && !state.rounds.length) {
+        const d = draftRound();
+        apply(d);
+        return createRound(d);
+      }
+      const id = await realRoundId(r);
+      if (!id || !findRound(id)) return;
+      return write(rpc, { p_round_id: id, ...args }, () => {
+        const q = findRound(id);
+        if (q) apply(q);
+      });
+    }
+
+    async function addRound() {
+      if (!state.rounds.length) {   // 화면에만 있던 1차부터 저장
+        const id = await createRound(draftRound());
+        if (!id) return;
+      }
+      if (state.rounds.length >= MAX_ROUNDS) return toast(ERRORS.too_many_rounds);
+      createRound({ name: roundNo(state.rounds.length), payer: myId(), amount: 0, excluded: [] });
+    }
+
+    async function deleteRound(r) {
+      const id = await realRoundId(r);
+      if (!id) return;
+      const res = await write('delete_round', { p_round_id: id }, () => {
+        state.rounds = state.rounds.filter(q => q.id !== id);
+      });
+      if (res.ok) toast('차수를 삭제했어요');
+    }
+
+    function renameRound(r, i) {
+      let input;
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', `${roundNo(i)} 이름`));
+        const row = h('div', 'add-row');
+        input = h('input');
+        input.type = 'text';
+        input.maxLength = 20;
+        input.placeholder = roundNo(i);
+        input.autocomplete = 'off';
+        input.value = r.name;
+        const save = h('button', 'save-btn', '저장');
+        row.append(input, save);
+        body.append(row);
+        const go = () => {
+          const name = input.value.trim().replace(/\s+/g, ' ');
+          if (!name) return toast('이름을 입력해주세요');
+          closeSheet();
+          editRound(r, q => { q.name = name; }, 'rename_round', { p_name: name });
+        };
+        save.addEventListener('click', go);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); go(); }
+        });
+      }, 'top');
+      input.focus();
+    }
+
+    function roundCard(r, i) {
+      const card = h('div', 'round');
+
+      // 머리줄: "1차" 배지 + 이름(탭 → 이름 바꾸기) + ⋯(차수 삭제)
+      const head = h('div', 'round-head');
+      const nameBtn = h('button', 'round-name');
+      const title = roundTitle(r, i);
+      if (title) nameBtn.append(title);
+      nameBtn.append(h('small', '', title ? '✏️' : '✏️ 이름'));
+      nameBtn.addEventListener('click', () => requireMe(() => renameRound(r, i)));
+      head.append(h('span', 'round-no', roundNo(i)), nameBtn);
+      if (r.id) {
+        const more = h('button', 'more-btn', '⋯');
+        more.setAttribute('aria-label', `${roundNo(i)} 삭제`);
+        more.addEventListener('click', () => requireMe(() =>
+          confirmSheet(`${roundNo(i)}를 삭제할까요?`, '이 차수의 금액과 참여 인원이 지워져요.', '삭제',
+            () => deleteRound(r))));
+        head.append(more);
+      }
+      card.append(head);
+
+      // 계산한 사람
+      card.append(h('div', 'round-label', '계산한 사람'));
+      const payers = h('div', 'mini-chips');
+      for (const p of state.participants) {
+        const chip = h('button', 'mini-chip' + (p.id === r.payer ? ' on' : ''), `${p.emoji} ${p.name}`);
+        chip.addEventListener('click', () => requireMe(() => {
+          if (p.id === r.payer) return;
+          editRound(r, q => { q.payer = p.id; }, 'set_round_payer', { p_payer_id: p.id });
+        }));
+        payers.append(chip);
+      }
+      if (!state.participants.length) payers.append(h('span', 'settle-empty', '위에서 이름을 먼저 넣어주세요'));
+      card.append(payers);
+
+      // 금액 (쉼표 자동). 입력을 멈추고 0.8초 뒤, 칸을 떠날 때, Enter 에 저장
+      card.append(h('div', 'round-label', '금액'));
+      const amountRow = h('div', 'amount-row');
+      const input = h('input', 'amount-input');
+      input.type = 'text';
+      input.inputMode = 'numeric';
+      input.autocomplete = 'off';
+      input.placeholder = '0';
+      input.value = r.amount ? won(r.amount) : '';
+      input.setAttribute('aria-label', `${roundNo(i)} 금액`);
+      let last = r.amount;
+      let timer = null;
+      const digits = () => Math.min(MAX_AMOUNT, Number(input.value.replace(/\D/g, '')) || 0);
+      const commit = () => {
+        clearTimeout(timer);
+        const v = digits();
+        if (v === last || !myId()) return;
+        last = v;
+        editRound(r, q => { q.amount = v; }, 'set_round_amount', { p_amount: v });
+      };
+      input.addEventListener('focus', () => {
+        if (myId()) return;
+        input.blur();   // "나"가 없으면 먼저 "누구세요?" → 고르면 이 칸으로 다시
+        requireMe(() => {
+          const el = document.querySelectorAll('#roundList .amount-input')[i];
+          if (el) el.focus();
+        });
+      });
+      input.addEventListener('input', () => {
+        const v = digits();
+        input.value = v ? won(v) : '';
+        clearTimeout(timer);
+        timer = setTimeout(commit, 800);
+      });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); }
+      });
+      input.addEventListener('blur', () => {
+        holdRounds = true;
+        commit();
+        setTimeout(() => {
+          holdRounds = false;
+          if (settleDirty) renderSettle();
+        }, 250);
+      });
+      amountRow.append(input, h('span', '', '원'));
+      card.append(amountRow);
+
+      // 참여 인원 (탭 → 빼기/넣기). 빈자리는 "친구 이름 넣기"
+      card.append(h('div', 'round-label', '참여 인원'));
+      const members = h('div', 'mini-chips');
+      for (const p of state.participants) {
+        const inRound = !r.excluded.includes(p.id);
+        const chip = h('button', 'mini-chip' + (inRound ? '' : ' off'), `${p.emoji} ${p.name}`);
+        chip.addEventListener('click', () => requireMe(() => editRound(r, q => {
+          const k = q.excluded.indexOf(p.id);
+          if (k >= 0) q.excluded.splice(k, 1);
+          else q.excluded.push(p.id);
+        }, 'toggle_round_member', { p_member_id: p.id })));
+        members.append(chip);
+      }
+      for (let k = 0; k < emptySlots(); k++) {
+        const chip = h('button', 'mini-chip empty', '❔ 빈자리');
+        chip.addEventListener('click', () => requireMe(() => openFillSlot(null, true)));
+        members.append(chip);
+      }
+      card.append(members);
+
+      // 요약 / 안내
+      const n = roundPeople(r).length;
+      if (r.amount > 0 && !findPerson(r.payer)) {
+        card.append(h('div', 'round-warn', '계산한 사람을 골라주세요'));
+      } else if (r.amount > 0 && !n) {
+        card.append(h('div', 'round-warn', '참여 인원을 한 명 이상 골라주세요'));
+      } else if (r.amount > 0) {
+        card.append(h('div', 'round-sum', `${n}명 · 1인 ${won(roundShare(r, n))}원`));
+      }
+      return card;
+    }
+
+    function renderTransfers() {
+      const box = $('transferList');
+      box.innerHTML = '';
+      const list = settleTransfers();
+      const me = myId();
+      for (const t of list) {
+        const a = findPerson(t.from), b = findPerson(t.to);
+        const row = h('div', 'transfer' + (t.from === me || t.to === me ? ' mine' : ''));
+        row.append(h('span', '', `${a.emoji} ${a.name} → ${b.emoji} ${b.name}`), h('b', '', `${won(t.amount)}원`));
+        box.append(row);
+      }
+      if (!list.length) {
+        box.append(h('p', 'settle-empty', state.rounds.some(countedRound)
+          ? '주고받을 돈이 없어요'
+          : '금액을 넣으면 누가 누구에게 보낼지 알려드려요'));
+      }
+      $('shareSettleBtn').hidden = !list.length;
+    }
+
+    function renderSettle() {
+      renderTransfers();
+      const rounds = state.rounds.length ? state.rounds : [draftRound()];
+      const add = $('addRoundBtn');
+      add.textContent = `＋ ${roundNo(rounds.length)} 추가`;
+      add.hidden = rounds.length >= MAX_ROUNDS;
+
+      // 금액을 입력하는 중이면 칸을 덮어쓰지 않게 다시 그리기를 미룸
+      const list = $('roundList');
+      const active = document.activeElement;
+      if (holdRounds || (active && active.classList.contains('amount-input') && list.contains(active))) {
+        settleDirty = true;
+        return;
+      }
+      settleDirty = false;
+      list.innerHTML = '';
+      rounds.forEach((r, i) => list.append(roundCard(r, i)));
+    }
+
+    // 공유 텍스트 (계산한 사람이 없거나 금액이 0인 차수는 뺌)
+    function settleText(account) {
+      const lines = [`[모일날] ${state.name} 정산 💸`];
+      state.rounds.forEach((r, i) => {
+        if (!countedRound(r)) return;
+        const payer = findPerson(r.payer);
+        const title = roundTitle(r, i) ? `${roundNo(i)} ${r.name}` : roundNo(i);
+        lines.push(`${title} ${won(r.amount)}원 · ${roundPeople(r).length}명 · ${payer.emoji} ${payer.name} 결제`);
+      });
+      lines.push('─────');
+      for (const t of settleTransfers()) {
+        const a = findPerson(t.from), b = findPerson(t.to);
+        lines.push(`${a.emoji} ${a.name} → ${b.emoji} ${b.name} ${won(t.amount)}원`);
+      }
+      const me = findPerson(myId());
+      if (account && me) lines.push(`${me.emoji} ${me.name}: ${account}`);
+      lines.push(location.origin + location.pathname + '?g=' + encodeURIComponent(roomId));
+      return lines.join('\n');
+    }
+
+    function doShareSettle(account) {
+      const text = settleText(account);
+      const skipped = state.rounds.some(r => r.amount > 0 && !findPerson(r.payer));
+      const note = '계산한 사람이 없는 차수는 빠져요';
+      const copy = () => copyText(text,
+        skipped ? `정산 내용을 복사했어요! (${note})` : '정산 내용을 복사했어요! 단톡에 붙여넣으세요',
+        '정산 내용');
+      if (navigator.share) {
+        if (skipped) toast(note);
+        navigator.share({ text }).catch(e => {
+          if (e && e.name === 'AbortError') return;   // 사용자가 공유 창을 닫음
+          copy();
+        });
+      } else {
+        copy();
+      }
+    }
+
+    // [💬 단톡에 공유]: 내가 받을 돈이 있으면 먼저 "받을 계좌 (선택)"
+    function shareSettle() {
+      const me = myId();
+      if (!(me && settleTransfers().some(t => t.to === me))) return doShareSettle('');
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', '💬 단톡에 공유'),
+                    h('p', 'sheet-desc', '계좌를 적으면 메시지에 같이 넣어요. 계좌는 이 기기에만 저장돼요.'),
+                    h('div', 'pick-label', '받을 계좌 (선택)'));
+        const input = h('input', 'account-input');
+        input.type = 'text';
+        input.maxLength = 40;
+        input.autocomplete = 'off';
+        input.placeholder = '카카오뱅크 3333-…';
+        input.value = local.account || '';
+        const go = h('button', 'btn primary full sheet-actions', '공유하기');
+        go.addEventListener('click', () => {
+          const account = input.value.trim().replace(/\s+/g, ' ');
+          local.account = account;   // 다음엔 자동으로 채움 (서버로는 보내지 않음)
+          saveLocal();
+          closeSheet();
+          doShareSettle(account);
+        });
+        body.append(input, go);
+      });
+    }
+
     // ===== 시작 =====
     async function init() {
       if (!db) {
@@ -3603,6 +4117,8 @@
       b.addEventListener('click', () => setTab('date'));
     }
     $('placeNudge').addEventListener('click', () => setTab('place'));
+    $('addRoundBtn').addEventListener('click', () => requireMe(addRound));
+    $('shareSettleBtn').addEventListener('click', shareSettle);
     $('addPlaceBtn').addEventListener('click', () => openAddPlace(false));
     $('addPlaceBtn2').addEventListener('click', () => openAddPlace(false));
     $('decidedBtn').addEventListener('click', () => openAddPlace(true));
