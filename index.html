@@ -1282,7 +1282,7 @@
         </div>
         <p class="legend-tip">
           날짜를 누르면 안 되는 사람을 볼 수 있어요<br>
-          이름을 고른 뒤 누르면 내 안 되는 날로 표시돼요
+          내 안 되는 날은 ✏️ 버튼이나 내 칩을 눌러 찍어요
         </p>
       </section>
 
@@ -3393,7 +3393,9 @@
           const wrap = h('div', 'add-row');
           const input = document.createElement('input');
           input.maxLength = 40;
-          input.value = p.title;
+          // 임시 이름이면 비워서 "가게 이름" 안내만, 진짜 이름이면 채워서
+          if (TEMP_PLACE_NAMES.includes(p.title)) input.placeholder = '가게 이름';
+          else input.value = p.title;
           const save = h('button', 'save-btn', '저장');
           wrap.append(input, save);
           row.replaceWith(wrap);
