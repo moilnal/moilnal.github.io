@@ -1119,6 +1119,10 @@
       resize: none;
     }
     .link-input:focus { border-color: var(--accent); }
+    .link-hint { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .place-name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .place-name-row .place-name { flex: 0 1 auto; min-width: 0; }
+    .place-name-row .small-btn { height: 24px; padding: 0 8px; font-size: 11px; }
     .link-state { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 18px; }
     .link-state.warn { color: var(--no-text); font-weight: 600; }
     .link-preview { margin-top: 10px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -2995,6 +2999,7 @@
     }
 
     // 링크로 짐작한 임시 이름 (이름을 못 읽었을 때)
+    const TEMP_PLACE_NAMES = ['네이버지도 장소', '카카오맵 장소', '새 장소'];
     function defaultPlaceName(url) {
       const host = hostOf(url);
       if (/naver/.test(host)) return '네이버지도 장소';
@@ -3064,7 +3069,17 @@
         else body.append(pin);
 
         const info = h('div', 'place-info');
-        info.append(h('div', 'place-name', (p.id === top ? '👑 ' : '') + p.title));
+        const nameEl = h('div', 'place-name', (p.id === top ? '👑 ' : '') + p.title);
+        // 임시 이름이면 바로 [✏️ 이름 붙이기] (이름을 바꾸면 사라짐)
+        if (TEMP_PLACE_NAMES.includes(p.title)) {
+          const nameRow = h('div', 'place-name-row');
+          const nameBtn = h('button', 'small-btn', '✏️ 이름 붙이기');
+          nameBtn.addEventListener('click', e => { e.stopPropagation(); showPlaceDetail(p.id, true); });
+          nameRow.append(nameEl, nameBtn);
+          info.append(nameRow);
+        } else {
+          info.append(nameEl);
+        }
         if (p.address) info.append(h('div', 'place-addr', p.address));
         const adder = findPerson(p.by);
         info.append(h('div', 'place-sub', hostOf(p.url) + (adder ? ` · ${adder.emoji} 추가` : '')));
@@ -3240,13 +3255,15 @@
           addPlace(link, title, image, shared.address || null, decided);
         });
 
-        body.append(input, status, previewBox, nameWrap, submit);
+        const guide = h('div', 'link-hint', '네이버지도 → 공유 → 복사해서 붙여넣으면 이름과 주소가 자동으로 들어가요');
+        body.append(input, guide, status, previewBox, nameWrap, submit);
         update();
       }, 'top');
       input.focus();
     }
 
-    function showPlaceDetail(id) {
+    // startRename: 열자마자 이름 고치기 칸으로 (카드의 [✏️ 이름 붙이기])
+    function showPlaceDetail(id, startRename) {
       const p = findPlace(id);
       if (!p) return;
       openSheet(body => {
@@ -3267,6 +3284,7 @@
           wrap.append(input, save);
           row.replaceWith(wrap);
           input.focus();
+          setTimeout(() => input.focus(), 50);   // 시트가 막 열린 경우에도 포커스
           const go = async () => {
             const name = input.value.trim().replace(/\s+/g, ' ');
             if (!name) return toast('이름을 입력해주세요');
@@ -3318,6 +3336,7 @@
           });
         });
         body.append(del);
+        if (startRename) renameBtn.click();
       });
     }
 
