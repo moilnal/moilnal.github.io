@@ -322,6 +322,31 @@
     }
     .hint:empty { display: none; }
 
+    /* 이 기기의 "나" 칩 표시 */
+    .chip .me-tag {
+      margin-left: 5px;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+    .chip.sel .me-tag { background: #fff; }
+    /* [✏️ 🐸 내 안 되는 날 찍기] */
+    .mark-btn {
+      height: 36px;
+      padding: 0 14px;
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--accent-text) !important;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     /* 입력 모드 안내: "멍청 님 입력 중" + 완료 */
     .hint.editing {
       display: flex;
@@ -1594,6 +1619,11 @@
         : null;
       state.undoUntil = data.undo_until ? new Date(data.undo_until) : null;
       if (state.selectedId && !findPerson(state.selectedId)) state.selectedId = null;
+      // 서버 목록에 없는 "나"(인원 감소, 처음부터 다시 만들기 등)는 풀어줌
+      if (roomId && local.me[roomId] && !findPerson(local.me[roomId])) {
+        delete local.me[roomId];
+        saveLocal();
+      }
     }
 
     // ===== 내 모임 목록 =====
@@ -1731,20 +1761,28 @@
     }
 
     // 빈자리 저장 성공: 그 사람 입력 모드로 + 이 기기의 "나"로 기억
-    function joinedAs(id, name, emoji) {
+    // after: "누구세요?"에서 이름을 넣었으면 하던 조작을 이어서 실행
+    function joinedAs(id, name, emoji, after) {
       if (!findPerson(id)) state.participants.push({ id, name, emoji, done: false });
-      state.selectedId = id;          // 저장하면 바로 그 사람 입력 모드로
-      local.me[roomId] = id;          // 이 기기에서 "나는 이 사람"
-      saveLocal();
+      setMe(id);                      // 이 기기에서 "나는 이 사람"
       newEmoji = null;
       closeSheet();
+      if (after) {
+        render();
+        return after();
+      }
+      if (tab === 'date') {           // 날짜 화면이면 바로 내 안 되는 날 찍기
+        state.selectedId = id;
+        toast(`${emoji} ${name} 님, 안 되는 날을 눌러주세요`);
+      } else {
+        toast(`${emoji} ${name} 님 반가워요 👋`);
+      }
       render();
-      toast(`${emoji} ${name} 님, 안 되는 날을 눌러주세요`);
     }
 
     // 빈자리를 저장하려는데 그사이 자리가 다 찬 경우 (서버가 room_full 로 거절, 덮어쓰지 않음)
     // → 최신 상태로 새로고침 후 [한 자리 늘리고 들어가기] / [취소]
-    async function slotTaken(name, emoji) {
+    async function slotTaken(name, emoji, after) {
       closeSheet();
       await refetch();
       if (state.size >= MAX_PEOPLE) {
@@ -1757,13 +1795,14 @@
           if (!grow.ok) return;
           const res = await write('save_member', { p_member_id: null, p_name: name, p_emoji: emoji },
             null, ['room_full']);   // 자리가 다 찼다는 안내는 팝업으로만
-          if (res.ok) return joinedAs(res.data, name, emoji);
-          if (res.error && res.error.message === 'room_full') slotTaken(name, emoji);   // 또 누가 먼저 들어옴
+          if (res.ok) return joinedAs(res.data, name, emoji, after);
+          if (res.error && res.error.message === 'room_full') slotTaken(name, emoji, after);   // 또 누가 먼저 들어옴
         }, 'primary');
     }
 
     // 빈자리 칩을 누르면: 이모지 버튼 + 이름 입력 + 저장
-    function openFillSlot() {
+    function openFillSlot(after) {
+      if (typeof after !== 'function') after = null;   // 칩 클릭 이벤트로 불렸을 때
       ensureNewEmoji();
       let input;
       openSheet(body => {
@@ -1804,7 +1843,7 @@
           if (!name) return toast('이름을 입력해주세요');
           if (state.participants.some(p => p.name === name)) return toast('이미 있는 이름이에요');
           const emoji = newEmoji;
-          if (emptySlots() <= 0) return slotTaken(name, emoji);   // 팝업을 연 사이 실시간으로 자리가 찼음
+          if (emptySlots() <= 0) return slotTaken(name, emoji, after);   // 팝업을 연 사이 실시간으로 자리가 찼음
 
           saving = true;
           saveBtn.disabled = true;
@@ -1814,10 +1853,10 @@
           saveBtn.disabled = false;
           if (!res.ok) {
             // 서버가 모임을 잠그고 인원을 세서, 그사이 다른 사람이 자리를 채웠으면 room_full 로 거절함 (덮어쓰지 않음)
-            if (res.error && res.error.message === 'room_full') slotTaken(name, emoji);
+            if (res.error && res.error.message === 'room_full') slotTaken(name, emoji, after);
             return;
           }
-          joinedAs(res.data, name, emoji);
+          joinedAs(res.data, name, emoji, after);
         };
         saveBtn.addEventListener('click', submit);
         input.addEventListener('keydown', e => {
@@ -1884,6 +1923,7 @@
       $('progress').classList.toggle('all', allDone);
 
       // 칩: 이름 있는 사람들 → 빈자리들
+      const me = myId();
       const chips = $('chips');
       chips.innerHTML = '';
 
@@ -1892,26 +1932,21 @@
         if (person.id === state.selectedId) cls += ' sel';
         if (!person.done) cls += ' pending';
         const chip = h('div', cls);
+        const isMe = person.id === me;
         chip.append(h('span', 'emo', person.emoji), h('span', 'nm', person.name));
+        if (isMe) chip.append(h('span', 'me-tag', '나'));
         if (person.done) chip.append(h('span', 'check', '✓'));
 
         chip.addEventListener('click', e => {
-          if (e.target.closest('.emo')) return openEmojiPicker(person);
-          // 이름 부분: 입력 모드 / 이미 선택된 사람이면 보기 모드로
-          if (state.selectedId === person.id) {
-            state.selectedId = null;
-          } else {
-            state.selectedId = person.id;
-            local.me[roomId] = person.id;   // 이 기기에서 "나는 이 사람"
-            saveLocal();
-          }
-          render();
+          if (!isMe) return pickPerson(person);   // 남의 칩: 이모지를 눌러도 같은 동작
+          if (e.target.closest('.emo')) return openEmojiPicker(person);   // 이모지 바꾸기는 내 칩에서만
+          toggleMarking();                        // 내 칩 이름: 안 되는 날 찍기 켜기/끄기
         });
         chips.append(chip);
       }
 
       // 이 기기의 "나"가 아직 없으면: 첫 빈자리 강조 + 멤버 초대는 보조 버튼으로
-      const noMe = !findPerson(local.me[roomId]);
+      const noMe = !me;
       $('linkBtn').classList.toggle('quiet', noMe);
 
       for (let i = 0; i < emptySlots(); i++) {
@@ -1941,7 +1976,7 @@
             state.selectedId = null;
             const res = await write('set_responded', { p_member_id: sel.id, p_responded: true },
               () => { sel.done = true; });
-            if (res.ok) toast('응답 완료! 이름을 다시 누르면 고칠 수 있어요');
+            if (res.ok) toast('응답 완료!');
           });
           btns.append(allOk);
         }
@@ -1955,8 +1990,17 @@
         hint.append(text, btns);
       } else if (changing && activeConfirmed()) {
         hint.textContent = '다른 날짜를 탭해서 다시 확정하세요';
-      } else if (emptySlots() > 0) {
+      } else if (noMe && state.participants.length > 0) {
+        hint.textContent = emptySlots() > 0
+          ? '누구세요? 내 캐릭터를 누르거나, 없으면 빈자리를 눌러주세요'
+          : '누구세요? 내 캐릭터를 눌러주세요';
+      } else if (noMe) {
         hint.textContent = '빈자리를 눌러 내 이름을 넣어보세요';
+      } else if (tab === 'date') {
+        const mine = findPerson(me);
+        const btn = h('button', 'mark-btn', `✏️ ${mine.emoji} 내 안 되는 날 찍기`);
+        btn.addEventListener('click', toggleMarking);
+        hint.append(btn);
       }
 
       renderBanner();
@@ -2250,9 +2294,10 @@
       return `${r.s}~${r.e}시`;
     }
 
-    // 입력 모드: 후보 칩 탭 → 내 ❤️ 켜고 투표 시트
+    // 후보 칩 탭 → 내 ❤️가 없을 때만 켜고 투표 시트 (이미 있으면 시트만, 취소는 시트 안에서)
     function voteForDate(date, key) {
-      const me = state.selectedId;
+      const me = myId();
+      if (!me) return;
       if (!myVote(key, me)) toggleVote(key, me);
       showVoteSheet(date, key);
     }
@@ -2273,7 +2318,7 @@
     }
 
     function showVoteSheet(date, key) {
-      const me = state.selectedId;
+      const me = myId();
       openSheet(body => {
         body.append(h('h3', 'sheet-title', shortLabel(date)));
 
@@ -2295,9 +2340,12 @@
         };
 
         body.append(heart, h('div', 'pick-label', '몇 시부터 몇 시까지 돼요? (선택)'), slider.el);
+        // 그 날 누가 안 되는지 + 확정은 달력 상세에서
+        const look = h('button', 'decided-btn', '📅 달력에서 보기');
+        look.addEventListener('click', () => { closeSheet(); goToDate(date, key); });
         const close = h('button', 'btn ghost full sheet-actions', '닫기');
         close.addEventListener('click', closeSheet);
-        body.append(close);
+        body.append(look, close);
         paint();
       });
     }
@@ -2471,17 +2519,15 @@
       box.innerHTML = '';
       for (const r of recs) {
         const d = r.date;
-        const mine = state.selectedId && myVote(r.key, state.selectedId);
+        const mine = myId() && myVote(r.key, myId());
         const chip = h('button', 'rec-chip ' + (r.count === 0 ? 'ok' : 'some') + (mine ? ' mine' : ''));
         chip.append(h('span', 'rc-date', `${r.crown ? '👑 ' : ''}${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`));
         if (r.hearts > 0) chip.append(h('span', 'rc-heart', `❤️ ${r.hearts}`));
         const common = commonRange(r.key);
         if (common) chip.append(h('span', 'rc-time', `${rangeText(common)} OK`));
         chip.append(h('span', 'rc-no', r.count > 0 ? `${r.count}명 안 됨` : '모두 가능'));
-        chip.addEventListener('click', () => {
-          if (state.selectedId) voteForDate(d, r.key);   // 입력 모드: 내 ❤️ + 가능 시간
-          else goToDate(d, r.key);                        // 보기 모드: 그 날짜로 이동 + 상세
-        });
+        // 탭 → "나"로 ❤️ + 가능 시간 (달력 상세는 시트의 [📅 달력에서 보기])
+        chip.addEventListener('click', () => requireMe(() => voteForDate(d, r.key)));
         box.append(chip);
       }
     }
@@ -2956,10 +3002,77 @@
     let placeChanging = false;   // 확정 배너의 [변경]을 누른 상태
     let previewSeq = 0;          // 늦게 도착한 미리보기 결과 버리기용
 
-    // 이 기기의 "나" (실제 참여자일 때만)
+    // 이 기기의 "나" (실제 참여자일 때만. 없어진 사람이면 null, 저장값은 applyRoom 에서 정리)
     function myId() {
       const p = findPerson(local.me[roomId]);
       return p ? p.id : null;
+    }
+
+    // "나" 바꾸기 (입력 모드는 닫음). ?new 임시 모임이면 서버 모임이 생긴 뒤 roomId 로 저장됨
+    function setMe(id) {
+      local.me[roomId] = id;
+      saveLocal();
+      state.selectedId = null;
+    }
+
+    // "나"로 하는 조작: "나"가 없으면 "누구세요?" 시트를 띄우고, 고르면 이어서 실행
+    function requireMe(action) {
+      if (myId()) return action();
+      openWhoSheet(action);
+    }
+
+    function openWhoSheet(action) {
+      openSheet(body => {
+        body.append(h('h3', 'sheet-title', '누구세요?'),
+                    h('p', 'sheet-desc', '내 캐릭터를 고르면 이어서 진행해요.'));
+        const list = h('div', 'pick-list');
+        for (const person of state.participants) {
+          const btn = h('button');
+          btn.append(h('span', 'emo', person.emoji), h('span', '', person.name));
+          btn.addEventListener('click', () => {
+            setMe(person.id);
+            closeSheet();
+            render();
+            toast(`${person.emoji} ${person.name} 님 반가워요 👋`);
+            action();
+          });
+          list.append(btn);
+        }
+        if (emptySlots() > 0) {
+          const add = h('button');
+          add.append(h('span', 'emo', '＋'), h('span', '', '내 이름 넣기'));
+          add.addEventListener('click', () => openFillSlot(action));
+          list.append(add);
+        }
+        body.append(list);
+      });
+    }
+
+    // 남의 칩을 누르면: "나"가 없으면 바로 "나"로, 있으면 "OO 님으로 바꿀까요?" 확인
+    function pickPerson(person) {
+      const done = () => { setMe(person.id); render(); };
+      if (!myId()) {
+        done();
+        return toast(`${person.emoji} ${person.name} 님 반가워요 👋`);
+      }
+      confirmSheet(`${person.emoji} ${person.name} 님으로 바꿀까요?`,
+        `이 기기에서 ${person.name} 님으로 입력하게 돼요. 언제든 다시 바꿀 수 있어요.`, '맞아요', () => {
+          done();
+          toast(`${person.name} 님으로 바꿨어요`);
+        }, 'primary');
+    }
+
+    // 내 안 되는 날 찍기 켜기/끄기 (다른 화면이면 날짜 화면으로 가서 켬)
+    function toggleMarking() {
+      const me = myId();
+      if (!me) return;
+      if (tab !== 'date') {
+        setTab('date');
+        state.selectedId = me;
+      } else {
+        state.selectedId = state.selectedId === me ? null : me;
+      }
+      render();
     }
     function findPlace(id) {
       return state.places.find(p => p.id === id);
@@ -3102,7 +3215,7 @@
 
     function togglePlaceVote(id) {
       const me = myId();
-      if (!me) return toast('먼저 위에서 내 이름을 골라주세요');
+      if (!me) return requireMe(() => togglePlaceVote(id));   // "누구세요?" 고른 뒤 이어서
       write('toggle_place_vote', { p_member_id: me, p_place_id: id }, () => {
         const p = findPlace(id);
         if (!p) return;
@@ -3171,6 +3284,7 @@
     }
 
     function openAddPlace(decided) {
+      if (!myId()) return requireMe(() => openAddPlace(decided));   // 추가한 사람 = "나"
       if (state.places.length >= MAX_PLACES) return toast(`후보는 ${MAX_PLACES}개까지 올릴 수 있어요`);
       let input;
       openSheet(body => {
