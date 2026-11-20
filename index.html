@@ -1744,11 +1744,8 @@
         : null;
       state.undoUntil = data.undo_until ? new Date(data.undo_until) : null;
       if (state.selectedId && !findPerson(state.selectedId)) state.selectedId = null;
-      // 서버 목록에 없는 "나"(인원 감소, 처음부터 다시 만들기 등)는 풀어줌
-      if (roomId && local.me[roomId] && !findPerson(local.me[roomId])) {
-        delete local.me[roomId];
-        saveLocal();
-      }
+      // 목록에 없는 "나"(인원 감소, 처음부터 다시 만들기 등)는 화면에서만 "나 없음" (myId 가 null).
+      // 저장값은 지우지 않아서 되돌리기로 그 사람이 돌아오면 "나"도 자동으로 돌아옴. 다른 사람을 고르면 덮어씀
     }
 
     // ===== 내 모임 목록 =====
@@ -3152,7 +3149,7 @@
     let placeChanging = false;   // 확정 배너의 [변경]을 누른 상태
     let previewSeq = 0;          // 늦게 도착한 미리보기 결과 버리기용
 
-    // 이 기기의 "나" (실제 참여자일 때만. 없어진 사람이면 null, 저장값은 applyRoom 에서 정리)
+    // 이 기기의 "나" (실제 참여자일 때만. 없어진 사람이면 null, 저장값은 그대로 둠)
     function myId() {
       const p = findPerson(local.me[roomId]);
       return p ? p.id : null;
