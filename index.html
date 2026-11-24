@@ -1137,6 +1137,7 @@
     .transfer:last-child { border-bottom: none; }
     .transfer.mine { font-weight: 800; }
     .transfer b { flex: none; }
+    .transfer-detail { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); }
     .settle-empty { font-size: 14px; color: var(--muted); line-height: 1.6; word-break: keep-all; }
     .account-input {
       width: 100%;
@@ -3696,34 +3697,39 @@
       return r.name === roundNo(i) ? '' : r.name;
     }
 
-    // 모든 차수를 합친 송금 목록 [{ from, to, amount }]
+    // 송금 목록 [{ from, to, amount, detail }]
+    // 차수마다 참여한 사람 → 그 차수의 계산한 사람 (경로를 바꾸지 않음).
+    // 같은 두 사람 사이에서만 상계하고, 같은 방향 여러 차수는 합침.
+    // detail: 상계·합산된 줄의 내역 ("1차 25,000 − 2차 16,700"), 차수 하나면 ''
     function settleTransfers() {
-      const bal = {};
-      for (const r of state.rounds) {
-        if (!countedRound(r)) continue;
+      const pairs = {};   // "작은id|큰id" → { a, b, parts: [{ i, from, amount }] }
+      state.rounds.forEach((r, i) => {
+        if (!countedRound(r)) return;
         const people = roundPeople(r);
         const share = roundShare(r, people.length);
         for (const p of people) {
           if (p.id === r.payer) continue;   // 계산한 사람이 참여 인원에 없으면 전원이 냄
-          bal[p.id] = (bal[p.id] || 0) - share;
-          bal[r.payer] = (bal[r.payer] || 0) + share;
+          const [a, b] = [p.id, r.payer].sort();
+          const key = a + '|' + b;
+          (pairs[key] = pairs[key] || { a, b, parts: [] }).parts.push({ i, from: p.id, amount: share });
         }
-      }
-      // 가장 많이 낼 사람 ↔ 가장 많이 받을 사람을 차례로 맞춤
-      const debt = Object.entries(bal).filter(([, v]) => v < 0).map(([id, v]) => ({ id, v: -v }));
-      const cred = Object.entries(bal).filter(([, v]) => v > 0).map(([id, v]) => ({ id, v }));
+      });
+      const order = id => state.participants.findIndex(p => p.id === id);
       const out = [];
-      while (debt.length && cred.length) {
-        debt.sort((a, b) => b.v - a.v);
-        cred.sort((a, b) => b.v - a.v);
-        const d = debt[0], c = cred[0];
-        const x = Math.min(d.v, c.v);
-        out.push({ from: d.id, to: c.id, amount: x });
-        d.v -= x;
-        c.v -= x;
-        if (!d.v) debt.shift();
-        if (!c.v) cred.shift();
+      for (const { a, b, parts } of Object.values(pairs)) {
+        const net = parts.reduce((s, x) => s + (x.from === a ? x.amount : -x.amount), 0);
+        if (!net) continue;
+        const from = net > 0 ? a : b, to = net > 0 ? b : a;
+        let detail = '';
+        if (parts.length > 1) {
+          // 보내는 방향(+) 먼저, 반대 방향(−)은 뒤에. 각각 차수 순서
+          const plus = parts.filter(x => x.from === from), minus = parts.filter(x => x.from !== from);
+          const item = x => `${roundNo(x.i)} ${won(x.amount)}`;
+          detail = plus.map(item).join(' + ') + minus.map(x => ' − ' + item(x)).join('');
+        }
+        out.push({ from, to, amount: Math.abs(net), detail });
       }
+      out.sort((x, y) => order(x.from) - order(y.from) || order(x.to) - order(y.to));
       return out;
     }
 
@@ -3932,7 +3938,9 @@
       for (const t of list) {
         const a = findPerson(t.from), b = findPerson(t.to);
         const row = h('div', 'transfer' + (t.from === me || t.to === me ? ' mine' : ''));
-        row.append(h('span', '', `${a.emoji} ${a.name} → ${b.emoji} ${b.name}`), h('b', '', `${won(t.amount)}원`));
+        const who = h('span', '', `${a.emoji} ${a.name} → ${b.emoji} ${b.name}`);
+        if (t.detail) who.append(h('small', 'transfer-detail', t.detail));
+        row.append(who, h('b', '', `${won(t.amount)}원`));
         box.append(row);
       }
       if (!list.length) {
@@ -3974,11 +3982,10 @@
       lines.push('─────');
       for (const t of settleTransfers()) {
         const a = findPerson(t.from), b = findPerson(t.to);
-        lines.push(`${a.emoji} ${a.name} → ${b.emoji} ${b.name} ${won(t.amount)}원`);
+        lines.push(`${a.emoji} ${a.name} → ${b.emoji} ${b.name} ${won(t.amount)}원` + (t.detail ? ` (${t.detail})` : ''));
       }
       const me = findPerson(myId());
       if (account && me) lines.push(`${me.emoji} ${me.name}: ${account}`);
-      lines.push(location.origin + location.pathname + '?g=' + encodeURIComponent(roomId));
       return lines.join('\n');
     }
 
